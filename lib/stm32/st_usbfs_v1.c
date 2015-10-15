@@ -43,7 +43,23 @@ const struct _usbd_driver st_usbfs_v1_usb_driver = {
 /** Initialize the USB device controller hardware of the STM32. */
 static usbd_device *st_usbfs_v1_usbd_init(void)
 {
+	uint32_t i;
 	rcc_periph_clock_enable(RCC_USB);
+	
+	/* RM0365 section 32.5.2 states we need to keep reset enabled
+	 * for t_STARTUP after clearing powerdown or the transceiver
+	 * won't work yet
+	 * 
+	 * experiments showed that not doing this will cause the
+	 * USB interface to enter error mode (USB_ISTR_ERR set) */
+	SET_REG(USB_CNTR_REG, USB_CNTR_FRES);
+	
+	/* datasheet of STM32F302?8 states t_STARTUP: 1us
+	 * assuming max. core frequency of 72 MHz
+	 * we just wait 36 iterations with >= 2 cycles per iteration */
+	for(i=0;i<72/2;i++) { 
+		__asm__("nop");
+	}
 	SET_REG(USB_CNTR_REG, 0);
 	SET_REG(USB_BTABLE_REG, 0);
 	SET_REG(USB_ISTR_REG, 0);
