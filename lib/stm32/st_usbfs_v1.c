@@ -45,7 +45,7 @@ static usbd_device *st_usbfs_v1_usbd_init(void)
 {
 	uint32_t i;
 	rcc_periph_clock_enable(RCC_USB);
-	
+	 
 	/* RM0365 section 32.5.2 states we need to keep reset enabled
 	 * for t_STARTUP after clearing powerdown or the transceiver
 	 * won't work yet
@@ -70,6 +70,8 @@ static usbd_device *st_usbfs_v1_usbd_init(void)
 	return &st_usbfs_dev;
 }
 
+#ifndef NEW_USBFS
+
 void st_usbfs_copy_to_pm(volatile void *vPM, const void *buf, uint16_t len)
 {
 	const uint16_t *lbuf = buf;
@@ -91,7 +93,6 @@ void st_usbfs_copy_from_pm(void *buf, const volatile void *vPM, uint16_t len)
 	uint16_t *lbuf = buf;
 	const volatile uint16_t *PM = vPM;
 	uint8_t odd = len & 1;
-
 	for (len >>= 1; len; PM += 2, lbuf++, len--) {
 		*lbuf = *PM;
 	}
@@ -100,3 +101,43 @@ void st_usbfs_copy_from_pm(void *buf, const volatile void *vPM, uint16_t len)
 		*(uint8_t *) lbuf = *(uint8_t *) PM;
 	}
 }
+#else
+
+/* from v2 */
+void st_usbfs_copy_to_pm(volatile void *vPM, const void *buf, uint16_t len)
+{
+	/*
+	 * This is a bytewise copy, so it always works, even on CM0(+)
+	 * that don't support unaligned accesses.
+	 */
+	const uint8_t *lbuf = buf;
+	volatile uint16_t *PM = vPM;
+	uint32_t i;
+	for (i = 0; i < len; i += 2) {
+		*PM++ = (uint16_t)lbuf[i+1] << 8 | lbuf[i];
+	}
+}
+
+/**
+ * Copy a data buffer from packet memory.
+ *
+ * @param buf Source pointer to data buffer.
+ * @param vPM Destination pointer into packet memory.
+ * @param len Number of bytes to copy.
+ */
+void st_usbfs_copy_from_pm(void *buf, const volatile void *vPM, uint16_t len)
+{
+	uint16_t *lbuf = buf;
+	const volatile uint16_t *PM = vPM;
+	uint8_t odd = len & 1;
+
+	for (len >>= 1; len; PM++, lbuf++, len--) {
+		*lbuf = *PM;
+	}
+
+	if (odd) {
+		*(uint8_t *) lbuf = *(uint8_t *) PM;
+	}
+}
+
+#endif

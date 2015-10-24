@@ -36,6 +36,11 @@
 
 #include <libopencm3/stm32/common/st_usbfs_common.h>
 
+#define NEW_USBFS
+#warning NEW_USBFS: FIXME: less ugly way needed
+
+#ifndef NEW_USBFS
+
 /* --- USB BTABLE Registers ------------------------------------------------ */
 
 #define USB_EP_TX_ADDR(EP) \
@@ -57,6 +62,31 @@
 
 #define USB_GET_EP_RX_BUFF(EP) \
 	(USB_PMA_BASE + (uint8_t *)(USB_GET_EP_RX_ADDR(EP) * 2))
+
+#else
+
+#define USB_EP_TX_ADDR(ep) \
+	((uint16_t *)(USB_PMA_BASE + (USB_GET_BTABLE + (ep) * 8 + 0) * 1))
+
+#define USB_EP_TX_COUNT(ep) \
+	((uint16_t *)(USB_PMA_BASE + (USB_GET_BTABLE + (ep) * 8 + 2) * 1))
+
+#define USB_EP_RX_ADDR(ep) \
+	((uint16_t *)(USB_PMA_BASE + (USB_GET_BTABLE + (ep) * 8 + 4) * 1))
+
+#define USB_EP_RX_COUNT(ep) \
+	((uint16_t *)(USB_PMA_BASE + (USB_GET_BTABLE + (ep) * 8 + 6) * 1))
+
+/* --- USB BTABLE manipulators --------------------------------------------- */
+
+/* from v2 */
+#define USB_GET_EP_TX_BUFF(ep) \
+	(USB_PMA_BASE + (uint8_t *)(USB_GET_EP_TX_ADDR(ep) * 1))
+
+#define USB_GET_EP_RX_BUFF(ep) \
+	(USB_PMA_BASE + (uint8_t *)(USB_GET_EP_RX_ADDR(ep) * 1))
+
+#endif
 
 #endif
 /** @cond */
