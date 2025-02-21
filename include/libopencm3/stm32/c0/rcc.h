@@ -438,6 +438,10 @@
 #define RCC_CSR1_LSEON				(1 << 0)
 /**@}*/
 
+/* needed for compatibility */
+#define RCC_CSR				RCC_CSR1
+#define RCC_CSR_LSEBYP		RCC_CSR1_LSEBYP
+
 /** @defgroup rcc_csr2 CSR2 Control and Status Register 2
 @{*/
 #define RCC_CSR2_LPWRRSTF			(1 << 31)
@@ -600,7 +604,7 @@ struct rcc_clock_scale {
 	uint8_t hpre;
 	uint8_t ppre;
 	uint8_t flash_waitstates;
-	enum pwr_vos_scale voltage_scale;
+
 	uint32_t ahb_frequency;
 	uint32_t apb_frequency;
 };

@@ -34,8 +34,8 @@
 /**@{*/
 
 #include <libopencm3/stm32/rcc.h>
-#include <libopencm3/stm32/pwr.h>
-#include <libopencm3/stm32/flash.h>
+//#include <libopencm3/stm32/pwr.h>
+//#include <libopencm3/stm32/flash.h>
 #include <libopencm3/cm3/assert.h>
 
 /* Set the default clock frequencies after reset. */
