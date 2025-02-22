@@ -75,6 +75,14 @@
 #define USB_BCDR_DCDEN		(1 << 1)
 #define USB_BCDR_BCDEN		(1 << 0)
 
+/* --- Channel/endpoint buffer descriptors  -------------------------------- */
+
+#define USB_CHEP_TXRXBD(EP) \
+	((uint32_t *)(USB_PMA_BASE + ((EP) * 8 + 0) * 1))
+
+#define USB_CHEP_RXTXBD(EP) \
+	((uint32_t *)(USB_PMA_BASE + ((EP) * 8 + 4) * 1))
+
 #endif
 /** @cond */
 #else
