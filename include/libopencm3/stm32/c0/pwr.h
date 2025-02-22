@@ -130,15 +130,7 @@
 
 BEGIN_DECLS
 
-/*
-void pwr_disable_backup_domain_write_protect(void);
-void pwr_enable_backup_domain_write_protect(void);
-
 void pwr_set_low_power_mode_selection(uint32_t lpms);
-
-void pwr_enable_power_voltage_detect(uint32_t pvdr_level, uint32_t pvdf_level);
-void pwr_disable_power_voltage_detect(void);
-*/
 
 END_DECLS
 
