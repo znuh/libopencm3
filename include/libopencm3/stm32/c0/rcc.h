@@ -405,12 +405,7 @@
 
 /** @defgroup rcc_ccipr2 CCIPR2 Peripherals Independent Clock Config Register 2
 @{*/
-#define RCC_CCIPR2_USBSEL_MASK		0x1
-#define RCC_CCIPR2_USBSEL_SHIFT		12
-/** @defgroup rcc_ccipr2_usbsel USBSEL
-@{*/
-#define RCC_CCIPR2_USBSEL_HSIUSB48		0
-#define RCC_CCIPR2_USBSEL_HSE			1
+#define RCC_CCIPR2_USBSEL			(1 << 12)
 /**@}*/
 
 /**@}*/
@@ -628,6 +623,7 @@ void rcc_css_int_clear(void);
 int rcc_css_int_flag(void);
 
 void rcc_set_sysclk_source(enum rcc_osc osc);
+void rcc_set_usbclk_source(enum rcc_osc clk);
 void rcc_wait_for_sysclk_status(enum rcc_osc osc);
 enum rcc_osc rcc_system_clock_source(void);
 

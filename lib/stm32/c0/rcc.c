@@ -172,6 +172,26 @@ void rcc_set_sysclk_source(enum rcc_osc osc)
 }
 
 /*---------------------------------------------------------------------------*/
+/** @brief RCC Set the Source for the USB Clock.
+ *
+ * @param clk Oscillator ID. Only HSIUSB48 or HSE are valid.
+ */
+void rcc_set_usbclk_source(enum rcc_osc clk)
+{
+	switch (clk) {
+	case RCC_HSE:
+		RCC_CCIPR2 |= RCC_CCIPR2_USBSEL;
+		break;
+	case RCC_HSIUSB48:
+		RCC_CCIPR2 &= ~RCC_CCIPR2_USBSEL;
+		break;
+	default:
+		/* do nothing */
+		break;
+	}
+}
+
+/*---------------------------------------------------------------------------*/
 /** @brief Return the clock source which is used as system clock.
  * @return rcc_osc system clock source
  */
