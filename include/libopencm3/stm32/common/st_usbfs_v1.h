@@ -36,6 +36,28 @@
 
 #include <libopencm3/stm32/common/st_usbfs_common.h>
 
+/*****************************************************************************/
+/* Register definitions                                                      */
+/*****************************************************************************/
+
+/* USB Buffer table address register */
+#define USB_BTABLE_REG		(&MMIO32(USB_DEV_FS_BASE + 0x50))
+
+/* --- USB BTABLE registers ------------------------------------------------ */
+
+#define USB_GET_BTABLE		GET_REG(USB_BTABLE_REG)
+
+/* --- USB BTABLE manipulators --------------------------------------------- */
+
+#define USB_GET_EP_TX_ADDR(EP)		GET_REG(USB_EP_TX_ADDR(EP))
+#define USB_GET_EP_TX_COUNT(EP)		GET_REG(USB_EP_TX_COUNT(EP))
+#define USB_GET_EP_RX_ADDR(EP)		GET_REG(USB_EP_RX_ADDR(EP))
+#define USB_GET_EP_RX_COUNT(EP)		GET_REG(USB_EP_RX_COUNT(EP))
+#define USB_SET_EP_TX_ADDR(EP, ADDR)	SET_REG(USB_EP_TX_ADDR(EP), ADDR)
+#define USB_SET_EP_TX_COUNT(EP, COUNT)	SET_REG(USB_EP_TX_COUNT(EP), COUNT)
+#define USB_SET_EP_RX_ADDR(EP, ADDR)	SET_REG(USB_EP_RX_ADDR(EP), ADDR)
+#define USB_SET_EP_RX_COUNT(EP, COUNT)	SET_REG(USB_EP_RX_COUNT(EP), COUNT)
+
 /* --- USB BTABLE Registers ------------------------------------------------ */
 
 #define USB_EP_TX_ADDR(EP) \

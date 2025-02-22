@@ -64,8 +64,6 @@ LGPL License Terms @ref lgpl_license
 #define USB_FNR_REG		(&MMIO32(USB_DEV_FS_BASE + 0x48))
 /* USB Device address register */
 #define USB_DADDR_REG		(&MMIO32(USB_DEV_FS_BASE + 0x4C))
-/* USB Buffer table address register */
-#define USB_BTABLE_REG		(&MMIO32(USB_DEV_FS_BASE + 0x50))
 
 /* USB EP register */
 #define USB_EP_REG(EP)		(&MMIO32(USB_DEV_FS_BASE) + (EP))
@@ -133,10 +131,6 @@ LGPL License Terms @ref lgpl_license
 
 #define USB_DADDR_EF		(1 << 7)
 #define USB_DADDR_ADDR		0x007F
-
-/* USB_BTABLE Values ------------------------------------------------------- */
-
-#define USB_BTABLE_BTABLE	0xFFF8
 
 /* --- USB device address register manipulators ---------------------------- */
 
@@ -272,23 +266,6 @@ LGPL License Terms @ref lgpl_license
 	SET_REG(USB_EP_REG(EP), \
 		GET_REG(USB_EP_REG(EP)) & \
 		(USB_EP_NTOGGLE_MSK | USB_EP_RX_DTOG))
-
-
-/* --- USB BTABLE registers ------------------------------------------------ */
-
-#define USB_GET_BTABLE		GET_REG(USB_BTABLE_REG)
-
-/* --- USB BTABLE manipulators --------------------------------------------- */
-
-#define USB_GET_EP_TX_ADDR(EP)		GET_REG(USB_EP_TX_ADDR(EP))
-#define USB_GET_EP_TX_COUNT(EP)		GET_REG(USB_EP_TX_COUNT(EP))
-#define USB_GET_EP_RX_ADDR(EP)		GET_REG(USB_EP_RX_ADDR(EP))
-#define USB_GET_EP_RX_COUNT(EP)		GET_REG(USB_EP_RX_COUNT(EP))
-#define USB_SET_EP_TX_ADDR(EP, ADDR)	SET_REG(USB_EP_TX_ADDR(EP), ADDR)
-#define USB_SET_EP_TX_COUNT(EP, COUNT)	SET_REG(USB_EP_TX_COUNT(EP), COUNT)
-#define USB_SET_EP_RX_ADDR(EP, ADDR)	SET_REG(USB_EP_RX_ADDR(EP), ADDR)
-#define USB_SET_EP_RX_COUNT(EP, COUNT)	SET_REG(USB_EP_RX_COUNT(EP), COUNT)
-
 
 
 /**@}*/

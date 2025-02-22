@@ -41,6 +41,8 @@
 /* Register definitions                                                      */
 /*****************************************************************************/
 
+/* USB Buffer table address register */
+#define USB_BTABLE_REG		(&MMIO32(USB_DEV_FS_BASE + 0x50))
 #define USB_LPMCSR_REG		(&MMIO32(USB_DEV_FS_BASE + 0x54))
 #define USB_BCDR_REG		(&MMIO32(USB_DEV_FS_BASE + 0x58))
 
@@ -77,6 +79,21 @@
 #define USB_BCDR_PDEN		(1 << 2)
 #define USB_BCDR_DCDEN		(1 << 1)
 #define USB_BCDR_BCDEN		(1 << 0)
+
+/* --- USB BTABLE registers ------------------------------------------------ */
+
+#define USB_GET_BTABLE		GET_REG(USB_BTABLE_REG)
+
+/* --- USB BTABLE manipulators --------------------------------------------- */
+
+#define USB_GET_EP_TX_ADDR(EP)		GET_REG(USB_EP_TX_ADDR(EP))
+#define USB_GET_EP_TX_COUNT(EP)		GET_REG(USB_EP_TX_COUNT(EP))
+#define USB_GET_EP_RX_ADDR(EP)		GET_REG(USB_EP_RX_ADDR(EP))
+#define USB_GET_EP_RX_COUNT(EP)		GET_REG(USB_EP_RX_COUNT(EP))
+#define USB_SET_EP_TX_ADDR(EP, ADDR)	SET_REG(USB_EP_TX_ADDR(EP), ADDR)
+#define USB_SET_EP_TX_COUNT(EP, COUNT)	SET_REG(USB_EP_TX_COUNT(EP), COUNT)
+#define USB_SET_EP_RX_ADDR(EP, ADDR)	SET_REG(USB_EP_RX_ADDR(EP), ADDR)
+#define USB_SET_EP_RX_COUNT(EP, COUNT)	SET_REG(USB_EP_RX_COUNT(EP), COUNT)
 
 /* --- USB BTABLE registers ------------------------------------------------ */
 
