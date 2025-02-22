@@ -97,25 +97,25 @@
 
 /* --- USB BTABLE registers ------------------------------------------------ */
 
-#define USB_EP_TX_ADDR(ep) \
-	((uint16_t *)(USB_PMA_BASE + (USB_GET_BTABLE + (ep) * 8 + 0) * 1))
+#define USB_EP_TX_ADDR(EP) \
+	((uint16_t *)(USB_PMA_BASE + (USB_GET_BTABLE + (EP) * 8 + 0) * 1))
 
-#define USB_EP_TX_COUNT(ep) \
-	((uint16_t *)(USB_PMA_BASE + (USB_GET_BTABLE + (ep) * 8 + 2) * 1))
+#define USB_EP_TX_COUNT(EP) \
+	((uint16_t *)(USB_PMA_BASE + (USB_GET_BTABLE + (EP) * 8 + 2) * 1))
 
-#define USB_EP_RX_ADDR(ep) \
-	((uint16_t *)(USB_PMA_BASE + (USB_GET_BTABLE + (ep) * 8 + 4) * 1))
+#define USB_EP_RX_ADDR(EP) \
+	((uint16_t *)(USB_PMA_BASE + (USB_GET_BTABLE + (EP) * 8 + 4) * 1))
 
-#define USB_EP_RX_COUNT(ep) \
-	((uint16_t *)(USB_PMA_BASE + (USB_GET_BTABLE + (ep) * 8 + 6) * 1))
+#define USB_EP_RX_COUNT(EP) \
+	((uint16_t *)(USB_PMA_BASE + (USB_GET_BTABLE + (EP) * 8 + 6) * 1))
 
 /* --- USB BTABLE manipulators --------------------------------------------- */
 
-#define USB_GET_EP_TX_BUFF(ep) \
-	(USB_PMA_BASE + (uint8_t *)(USB_GET_EP_TX_ADDR(ep) * 1))
+#define USB_GET_EP_TX_BUFF(EP) \
+	(USB_PMA_BASE + (uint8_t *)(USB_GET_EP_TX_ADDR(EP) * 1))
 
-#define USB_GET_EP_RX_BUFF(ep) \
-	(USB_PMA_BASE + (uint8_t *)(USB_GET_EP_RX_ADDR(ep) * 1))
+#define USB_GET_EP_RX_BUFF(EP) \
+	(USB_PMA_BASE + (uint8_t *)(USB_GET_EP_RX_ADDR(EP) * 1))
 
 #endif
 /** @cond */
