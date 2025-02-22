@@ -202,8 +202,7 @@ uint16_t st_usbfs_ep_write_packet(usbd_device *dev, uint8_t addr,
 		return 0;
 	}
 
-	st_usbfs_copy_to_pm(USB_GET_EP_TX_BUFF(addr), buf, len); // move to device-specific fn
-	USB_SET_EP_TX_COUNT(addr, len);							// move to device-specific fn
+	st_usbfs_copy_to_pm(addr, buf, len);
 	USB_SET_EP_TX_STAT(addr, USB_EP_TX_STAT_VALID);
 
 	return len;
@@ -217,8 +216,7 @@ uint16_t st_usbfs_ep_read_packet(usbd_device *dev, uint8_t addr,
 		return 0;
 	}
 
-	len = MIN(USB_GET_EP_RX_COUNT(addr) & 0x3ff, len);			// move to device-specific fn
-	st_usbfs_copy_from_pm(buf, USB_GET_EP_RX_BUFF(addr), len);	// move to device-specific fn
+	len = st_usbfs_copy_from_pm(addr, buf, len);
 	USB_CLR_EP_RX_CTR(addr);
 
 	if (!st_usbfs_force_nak[addr]) {

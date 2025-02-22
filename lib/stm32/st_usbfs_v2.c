@@ -58,32 +58,34 @@ void st_usbfs_assign_buffer(uint16_t ep_id, uint32_t dir_tx, uint16_t ram_ofs, u
 	}
 }
 
-void st_usbfs_copy_to_pm(volatile void *vPM, const void *buf, uint16_t len)
+void st_usbfs_copy_to_pm(uint16_t ep_id, const void *buf, uint16_t len)
 {
 	/*
 	 * This is a bytewise copy, so it always works, even on CM0(+)
 	 * that don't support unaligned accesses.
 	 */
 	const uint8_t *lbuf = buf;
-	volatile uint16_t *PM = vPM;
+	volatile uint16_t *PM = (volatile void *)USB_GET_EP_TX_BUFF(ep_id);
 	uint32_t i;
 	for (i = 0; i < len; i += 2) {
 		*PM++ = (uint16_t)lbuf[i+1] << 8 | lbuf[i];
 	}
+	USB_SET_EP_TX_COUNT(ep_id, len);
 }
 
 /**
  * Copy a data buffer from packet memory.
  *
+ * @param ep_id Endpoint ID (0..7)
  * @param buf Destination pointer for data buffer.
- * @param vPM Source pointer into packet memory.
  * @param len Number of bytes to copy.
  */
-void st_usbfs_copy_from_pm(void *buf, const volatile void *vPM, uint16_t len)
+uint16_t st_usbfs_copy_from_pm(uint16_t ep_id, void *buf, uint16_t len)
 {
-	const volatile uint16_t *PM = vPM;
-	uint8_t odd = len & 1;
-	len >>= 1;
+	const volatile uint16_t *PM = (volatile void *)USB_GET_EP_RX_BUFF(ep_id);
+	uint16_t res = MIN(USB_GET_EP_RX_COUNT(ep_id) & 0x3ff, len);
+	uint8_t odd = res & 1;
+	len = res >> 1;
 
 	if (((uintptr_t) buf) & 0x01) {
 		for (; len; PM++, len--) {
@@ -100,6 +102,7 @@ void st_usbfs_copy_from_pm(void *buf, const volatile void *vPM, uint16_t len)
 	if (odd) {
 		*(uint8_t *) buf = *(uint8_t *) PM;
 	}
+	return res;
 }
 
 static void st_usbfs_v2_disconnect(usbd_device *usbd_dev, bool disconnected)

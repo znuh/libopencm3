@@ -62,22 +62,22 @@ void st_usbfs_poll(usbd_device *usbd_dev);
 void st_usbfs_assign_buffer(uint16_t ep_id, uint32_t dir_tx, uint16_t ram_ofs, uint16_t rx_blocks);
 
 /**
- * Copy a data buffer to packet memory.
- *
- * @param vPM Destination pointer into packet memory.
- * @param buf Source pointer to data buffer.
- * @param len Number of bytes to copy.
- */
-void st_usbfs_copy_from_pm(void *buf, const volatile void *vPM, uint16_t len);
-
-/**
  * Copy a data buffer from packet memory.
  *
- * @param vPM Destination pointer into packet memory.
- * @param buf Source pointer to data buffer.
+ * @param ep_id Endpoint ID (0..7)
+ * @param buf Destination pointer for data buffer.
  * @param len Number of bytes to copy.
  */
-void st_usbfs_copy_to_pm(volatile void *vPM, const void *buf, uint16_t len);
+uint16_t st_usbfs_copy_from_pm(uint16_t ep_id, void *buf, uint16_t len);
+
+/**
+ * Copy a data buffer to packet memory.
+ *
+ * @param ep_id Endpoint ID (0..7)
+ * @param buf Source pointer
+ * @param len Number of bytes to copy.
+ */
+void st_usbfs_copy_to_pm(uint16_t ep_id, const void *buf, uint16_t len);
 
 extern uint8_t st_usbfs_force_nak[8];
 extern struct _usbd_device st_usbfs_dev;

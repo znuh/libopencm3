@@ -71,13 +71,14 @@ void st_usbfs_assign_buffer(uint16_t ep_id, uint32_t dir_tx, uint16_t ram_ofs, u
 	}
 }
 
-void st_usbfs_copy_to_pm(volatile void *vPM, const void *buf, uint16_t len)
+void st_usbfs_copy_to_pm(uint16_t ep_id, const void *buf, uint16_t len)
 {
 	const uint16_t *lbuf = buf;
-	volatile uint32_t *PM = vPM;
+	volatile uint32_t *PM = (volatile void *)USB_GET_EP_TX_BUFF(ep_id);
 	for (len = (len + 1) >> 1; len; len--) {
 		*PM++ = *lbuf++;
 	}
+	USB_SET_EP_TX_COUNT(ep_id, len);
 }
 
 /**
@@ -87,11 +88,13 @@ void st_usbfs_copy_to_pm(volatile void *vPM, const void *buf, uint16_t len)
  * @param vPM Destination pointer into packet memory.
  * @param len Number of bytes to copy.
  */
-void st_usbfs_copy_from_pm(void *buf, const volatile void *vPM, uint16_t len)
+uint16_t st_usbfs_copy_from_pm(uint16_t ep_id, void *buf, uint16_t len)
 {
+	const volatile uint16_t *PM = (volatile void *)USB_GET_EP_RX_BUFF(ep_id);
+	uint16_t res = MIN(USB_GET_EP_RX_COUNT(ep_id) & 0x3ff, len);
 	uint16_t *lbuf = buf;
-	const volatile uint16_t *PM = vPM;
-	uint8_t odd = len & 1;
+	uint8_t odd = res & 1;
+	len = res;
 
 	for (len >>= 1; len; PM += 2, lbuf++, len--) {
 		*lbuf = *PM;
@@ -100,4 +103,5 @@ void st_usbfs_copy_from_pm(void *buf, const volatile void *vPM, uint16_t len)
 	if (odd) {
 		*(uint8_t *) lbuf = *(uint8_t *) PM;
 	}
+	return res;
 }
