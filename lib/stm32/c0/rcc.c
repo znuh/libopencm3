@@ -34,8 +34,7 @@
 /**@{*/
 
 #include <libopencm3/stm32/rcc.h>
-//#include <libopencm3/stm32/pwr.h>
-//#include <libopencm3/stm32/flash.h>
+#include <libopencm3/stm32/flash.h>
 #include <libopencm3/cm3/assert.h>
 
 /* Set the default clock frequencies after reset. */
@@ -43,7 +42,16 @@ uint32_t rcc_ahb_frequency =  12000000;
 uint32_t rcc_apb1_frequency = 12000000;
 
 const struct rcc_clock_scale rcc_clock_config[RCC_CLOCK_CONFIG_END] = {
-	/* TBD */
+	[RCC_CLOCK_CONFIG_HSI_48MHZ] = {
+		/* HSI48, div=1, 1ws */
+		.sysclock_source = RCC_HSI48,
+		.sysdiv = RCC_CR_HSIDIV_DIV1,
+		.hpre = RCC_CFGR_HPRE_NODIV,
+		.ppre = RCC_CFGR_PPRE_NODIV,
+		.flash_waitstates = FLASH_ACR_LATENCY_1WS,
+		.ahb_frequency = 48000000,
+		.apb_frequency = 48000000,
+	},
 };
 
 void rcc_osc_on(enum rcc_osc osc)
@@ -52,7 +60,7 @@ void rcc_osc_on(enum rcc_osc osc)
 	case RCC_HSE:
 		RCC_CR |= RCC_CR_HSEON;
 		break;
-	case RCC_HSI:
+	case RCC_HSI48:
 		RCC_CR |= RCC_CR_HSION;
 		break;
 	case RCC_LSE:
@@ -73,7 +81,7 @@ void rcc_osc_off(enum rcc_osc osc)
 	case RCC_HSE:
 		RCC_CR &= ~RCC_CR_HSEON;
 		break;
-	case RCC_HSI:
+	case RCC_HSI48:
 		RCC_CR &= ~RCC_CR_HSION;
 		break;
 	case RCC_LSE:
@@ -93,7 +101,7 @@ bool rcc_is_osc_ready(enum rcc_osc osc)
 	switch (osc) {
 	case RCC_HSE:
 		return RCC_CR & RCC_CR_HSERDY;
-	case RCC_HSI:
+	case RCC_HSI48:
 		return RCC_CR & RCC_CR_HSIRDY;
 	case RCC_LSE:
 		return RCC_CSR1 & RCC_CSR1_LSERDY;
@@ -141,7 +149,7 @@ void rcc_set_sysclk_source(enum rcc_osc osc)
 	uint32_t sw = 0;
 
 	switch (osc) {
-		case RCC_HSI:
+		case RCC_HSI48:
 			sw = RCC_CFGR_SW_HSISYS;
 			break;
 		case RCC_HSE:
@@ -171,7 +179,7 @@ enum rcc_osc rcc_system_clock_source(void)
 {
 	switch ((RCC_CFGR >> RCC_CFGR_SWS_SHIFT) & RCC_CFGR_SWS_MASK) {
 		case RCC_CFGR_SW_HSISYS:
-			return RCC_HSI;
+			return RCC_HSI48;
 		case RCC_CFGR_SW_HSE:
 			return RCC_HSE;
 		case RCC_CFGR_SW_LSE:
@@ -196,7 +204,7 @@ void rcc_wait_for_sysclk_status(enum rcc_osc osc)
 		case RCC_HSE:
 			sws = RCC_CFGR_SWS_HSE;
 			break;
-		case RCC_HSI:
+		case RCC_HSI48:
 			sws = RCC_CFGR_SWS_HSISYS;
 			break;
 		case RCC_LSI:
@@ -243,13 +251,13 @@ void rcc_set_hpre(uint32_t hpre)
  * @brief Configure HSI16 clock division factor to feed SYSCLK
  * @param[in] hsidiv HSYSSIS clock division factor @ref rcc_cr_hsidiv
  */
-void rcc_set_hsisys_div(uint32_t hsidiv)
+void rcc_set_sysdiv(uint32_t div)
 {
 	uint32_t reg32;
 
 	reg32 = RCC_CR;
 	reg32 &= ~(RCC_CR_HSIDIV_MASK << RCC_CR_HSIDIV_SHIFT);
-	RCC_CR = (reg32 | (hsidiv << RCC_CR_HSIDIV_SHIFT));
+	RCC_CR = (reg32 | (div << RCC_CR_HSIDIV_SHIFT));
 }
 
 /**
@@ -266,39 +274,17 @@ void rcc_set_mcopre(uint32_t mcopre)
 }
 
 /**
- * @brief Setup sysclock with desired source (HSE/HSI/PLL/LSE/LSI). taking care of flash/pwr and src configuration
+ * @brief Setup sysclock with desired source (HSE/HSI/PLL/LSE/LSI). taking care of flash and src configuration
  * @param clock rcc_clock_scale with desired parameters
  */
 void rcc_clock_setup(const struct rcc_clock_scale *clock)
 {
-#if 0 // TBD
-	if (clock->sysclock_source == RCC_PLL) {
-		enum rcc_osc pll_source;
+	flash_set_ws(FLASH_ACR_LATENCY_1WS);
+	
+	rcc_set_sysdiv(clock->sysdiv);
 
-		if (clock->pll_source == RCC_PLLCFGR_PLLSRC_HSE)
-			pll_source = RCC_HSE;
-		else
-			pll_source = RCC_HSI;
-
-		/* start pll src osc. */
-		rcc_osc_on(pll_source);
-		rcc_wait_for_osc_ready(pll_source);
-
-		/* stop pll to reconfigure it. */
-		rcc_osc_off(RCC_PLL);
-		while (rcc_is_osc_ready(RCC_PLL));
-
-		rcc_set_main_pll(clock->pll_source, clock->pll_div, clock->pll_mul, clock->pllp_div, clock->pllq_div, clock->pllr_div);
-
-		rcc_enable_pllr(true);
-	} else if (clock->sysclock_source == RCC_HSI) {
-		rcc_set_hsisys_div(clock->hsisys_div);
-	}
-
-	rcc_periph_clock_enable(RCC_PWR);
-	pwr_set_vos_scale(clock->voltage_scale);
-
-	flash_set_ws(clock->flash_waitstates);
+	if(clock->flash_waitstates != FLASH_ACR_LATENCY_1WS)
+		flash_set_ws(clock->flash_waitstates);
 
 	/* enable flash prefetch if we have at least 1WS */
 	if (clock->flash_waitstates > FLASH_ACR_LATENCY_0WS)
@@ -315,9 +301,8 @@ void rcc_clock_setup(const struct rcc_clock_scale *clock)
 	rcc_set_sysclk_source(clock->sysclock_source);
 	rcc_wait_for_sysclk_status(clock->sysclock_source);
 
-	rcc_ahb_frequency = clock->ahb_frequency;
+	rcc_ahb_frequency  = clock->ahb_frequency;
 	rcc_apb1_frequency = clock->apb_frequency;
-#endif // TBD
 }
 
 /**

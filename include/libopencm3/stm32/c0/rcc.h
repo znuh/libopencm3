@@ -471,9 +471,9 @@ extern uint32_t rcc_apb1_frequency;
 #define _REG_BIT(offset, bit)            (((offset) << 5) + (bit))
 
 enum rcc_osc {
-	RCC_HSI,
+	RCC_HSI48,
+	RCC_HSIUSB48,
 	RCC_HSE,
-	RCC_PLL,
 	RCC_LSE,
 	RCC_LSI,
 };
@@ -598,8 +598,7 @@ enum rcc_periph_rst {
 struct rcc_clock_scale {
 	enum rcc_osc sysclock_source;
 
-	/* HSI as sysclock source cfg */
-	uint8_t hsisys_div;
+	uint8_t sysdiv;
 
 	uint8_t hpre;
 	uint8_t ppre;
@@ -610,11 +609,7 @@ struct rcc_clock_scale {
 };
 
 enum rcc_clock {
-	/*
-	RCC_CLOCK_CONFIG_LSI_32KHZ,
-	RCC_CLOCK_CONFIG_HSI_4MHZ,
-	RCC_CLOCK_CONFIG_HSI_16MHZ,
-	*/
+	RCC_CLOCK_CONFIG_HSI_48MHZ,
 	RCC_CLOCK_CONFIG_END
 };
 
@@ -638,7 +633,7 @@ enum rcc_osc rcc_system_clock_source(void);
 
 void rcc_set_ppre(uint32_t ppre);
 void rcc_set_hpre(uint32_t hpre);
-void rcc_set_hsisys_div(uint32_t hsidiv);
+void rcc_set_sysdiv(uint32_t sysdiv);
 void rcc_set_mcopre(uint32_t mcopre);
 
 void rcc_clock_setup(const struct rcc_clock_scale *clock);
