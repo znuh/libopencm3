@@ -19,17 +19,13 @@
 
 /* THIS FILE SHOULD NOT BE INCLUDED DIRECTLY !
  * Use top-level <libopencm3/stm32/st_usbfs.h>
- *
- * Additional definitions for F0 devices :
- * -F0x0 (RM0360),
- * -F04x, F0x2, F0x8 (RM0091)
  */
 
 /** @cond */
 #ifdef LIBOPENCM3_ST_USBFS_H
 /** @endcond */
-#ifndef LIBOPENCM3_ST_USBFS_V2_H
-#define LIBOPENCM3_ST_USBFS_V2_H
+#ifndef LIBOPENCM3_ST_USBFS_V3_H
+#define LIBOPENCM3_ST_USBFS_V3_H
 
 #include <libopencm3/stm32/common/st_usbfs_common.h>
 
@@ -41,6 +37,7 @@
 /* Register definitions                                                      */
 /*****************************************************************************/
 
+/* USB Buffer table address register */
 #define USB_LPMCSR_REG		(&MMIO32(USB_DEV_FS_BASE + 0x54))
 #define USB_BCDR_REG		(&MMIO32(USB_DEV_FS_BASE + 0x58))
 
@@ -78,32 +75,9 @@
 #define USB_BCDR_DCDEN		(1 << 1)
 #define USB_BCDR_BCDEN		(1 << 0)
 
-/* --- USB BTABLE Registers ------------------------------------------------ */
-
-#define USB_EP_TX_ADDR(EP) \
-	((uint32_t *)(USB_PMA_BASE + (USB_GET_BTABLE + EP * 8 + 0) * 2))
-
-#define USB_EP_TX_COUNT(EP) \
-	((uint32_t *)(USB_PMA_BASE + (USB_GET_BTABLE + EP * 8 + 2) * 2))
-
-#define USB_EP_RX_ADDR(EP) \
-	((uint32_t *)(USB_PMA_BASE + (USB_GET_BTABLE + EP * 8 + 4) * 2))
-
-#define USB_EP_RX_COUNT(EP) \
-	((uint32_t *)(USB_PMA_BASE + (USB_GET_BTABLE + EP * 8 + 6) * 2))
-
-/* --- USB BTABLE manipulators --------------------------------------------- */
-
-#define USB_GET_EP_TX_BUFF(EP) \
-	(USB_PMA_BASE + (uint8_t *)(USB_GET_EP_TX_ADDR(EP) * 2))
-
-#define USB_GET_EP_RX_BUFF(EP) \
-	(USB_PMA_BASE + (uint8_t *)(USB_GET_EP_RX_ADDR(EP) * 2))
-
 #endif
 /** @cond */
 #else
-#error "st_usbfs_v2.h should not be included directly, only via st_usbfs.h"
+#error "st_usbfs_v3.h should not be included directly, only via st_usbfs.h"
 #endif
 /** @endcond */
-

@@ -46,7 +46,6 @@ static usbd_device *st_usbfs_v3_usbd_init(void)
 
 	rcc_periph_clock_enable(RCC_USB);
 	SET_REG(USB_CNTR_REG, 0);
-	SET_REG(USB_BTABLE_REG, 0);
 	SET_REG(USB_ISTR_REG, 0);
 
 	/* Enable RESET, SUSPEND, RESUME and CTR interrupts. */
@@ -56,35 +55,71 @@ static usbd_device *st_usbfs_v3_usbd_init(void)
 	return &st_usbfs_dev;
 }
 
-void st_usbfs_copy_to_pm(volatile void *vPM, const void *buf, uint16_t len)
-{
-	const uint16_t *lbuf = buf;
-	volatile uint32_t *PM = vPM;
-	for (len = (len + 1) >> 1; len; len--) {
-		*PM++ = *lbuf++;
+/**
+ * Assign a data buffer in packet memory for an endpoint
+ *
+ * @param ep_id Endpoint ID (0..7)
+ * @param dir_tx 1 if TX endpoint, 0 for RX
+ * @param ram_ofs Pointer to RAM offset for packet buffer
+ * @param rx_blocks BLSIZE / NUM_BLOCK[4:0] (shifted) for rxcount register - 0 for TX
+ */
+/* TBD */
+void st_usbfs_assign_buffer(uint16_t ep_id, uint32_t dir_tx, uint16_t *ram_ofs, uint16_t rx_blocks) {
+	if(dir_tx)
+		USB_SET_EP_TX_ADDR(ep_id, *ram_ofs);
+	else {
+		USB_SET_EP_RX_ADDR(ep_id, *ram_ofs);
+		USB_SET_EP_RX_COUNT(ep_id, rx_blocks);
 	}
+}
+
+/* TBD */
+void st_usbfs_copy_to_pm(uint16_t ep_id, const void *buf, uint16_t len)
+{
+	/*
+	 * This is a bytewise copy, so it always works, even on CM0(+)
+	 * that don't support unaligned accesses.
+	 */
+	const uint8_t *lbuf = buf;
+	volatile uint16_t *PM = (volatile void *)USB_GET_EP_TX_BUFF(ep_id);
+	uint32_t i;
+	for (i = 0; i < len; i += 2) {
+		*PM++ = (uint16_t)lbuf[i+1] << 8 | lbuf[i];
+	}
+	USB_SET_EP_TX_COUNT(ep_id, len);
 }
 
 /**
  * Copy a data buffer from packet memory.
  *
- * @param buf Source pointer to data buffer.
- * @param vPM Destination pointer into packet memory.
+ * @param ep_id Endpoint ID (0..7)
+ * @param buf Destination pointer for data buffer.
  * @param len Number of bytes to copy.
  */
-void st_usbfs_copy_from_pm(void *buf, const volatile void *vPM, uint16_t len)
+/* TBD */
+uint16_t st_usbfs_copy_from_pm(uint16_t ep_id, void *buf, uint16_t len)
 {
-	uint16_t *lbuf = buf;
-	const volatile uint16_t *PM = vPM;
-	uint8_t odd = len & 1;
+	const volatile uint16_t *PM = (volatile void *)USB_GET_EP_RX_BUFF(ep_id);
+	uint16_t res = MIN(USB_GET_EP_RX_COUNT(ep_id) & 0x3ff, len);
+	uint8_t odd = res & 1;
+	len = res >> 1;
 
-	for (len >>= 1; len; PM += 2, lbuf++, len--) {
-		*lbuf = *PM;
+	if (((uintptr_t) buf) & 0x01) {
+		for (; len; PM++, len--) {
+			uint16_t value = *PM;
+			*(uint8_t *) buf++ = value;
+			*(uint8_t *) buf++ = value >> 8;
+		}
+	} else {
+		for (; len; PM++, buf += 2, len--) {
+			*(uint16_t *) buf = *PM;
+		}
 	}
 
 	if (odd) {
-		*(uint8_t *) lbuf = *(uint8_t *) PM;
+		*(uint8_t *) buf = *(uint8_t *) PM;
 	}
+	return res;
 }
 
 static void st_usbfs_v3_disconnect(usbd_device *usbd_dev, bool disconnected)
