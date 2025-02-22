@@ -93,7 +93,7 @@ void st_usbfs_ep_setup(usbd_device *dev, uint8_t addr, uint8_t type,
 	USB_SET_EP_TYPE(addr, typelookup[type]);
 
 	if (dir || (addr == 0)) {
-		USB_SET_EP_TX_ADDR(addr, dev->pm_top);	// move to device-specific fn
+		st_usbfs_assign_buffer(addr, 1, dev->pm_top, 0);
 		if (callback) {
 			dev->user_callback_ctr[addr][USB_TRANSACTION_IN] =
 			    (void *)callback;
@@ -105,9 +105,7 @@ void st_usbfs_ep_setup(usbd_device *dev, uint8_t addr, uint8_t type,
 
 	if (!dir) {
 		uint32_t realsize = max_size;
-		USB_SET_EP_RX_ADDR(addr, dev->pm_top);	// move to device-specific fn
-		/* write to the BL_SIZE and NUM_BLOCK fields */
-		USB_SET_EP_RX_COUNT(addr, bufsize_to_rxblocks(&realsize) << 10);	// move to device-specific fn
+		st_usbfs_assign_buffer(addr, 0, dev->pm_top, bufsize_to_rxblocks(&realsize) << 10);
 		if (callback) {
 			dev->user_callback_ctr[addr][USB_TRANSACTION_OUT] =
 			    (void *)callback;
