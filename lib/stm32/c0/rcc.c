@@ -45,7 +45,7 @@ const struct rcc_clock_scale rcc_clock_config[RCC_CLOCK_CONFIG_END] = {
 	[RCC_CLOCK_CONFIG_HSI_48MHZ] = {
 		/* HSI48, div=1, 1ws */
 		.sysclock_source = RCC_HSI48,
-		.sysdiv = RCC_CR_HSIDIV_DIV1,
+		.hsisys_div = RCC_CR_HSIDIV_DIV1,
 		.hpre = RCC_CFGR_HPRE_NODIV,
 		.ppre = RCC_CFGR_PPRE_NODIV,
 		.flash_waitstates = FLASH_ACR_LATENCY_1WS,
@@ -251,13 +251,13 @@ void rcc_set_hpre(uint32_t hpre)
  * @brief Configure HSI16 clock division factor to feed SYSCLK
  * @param[in] hsidiv HSYSSIS clock division factor @ref rcc_cr_hsidiv
  */
-void rcc_set_sysdiv(uint32_t div)
+void rcc_set_hsisys_div(uint32_t hsidiv)
 {
 	uint32_t reg32;
 
 	reg32 = RCC_CR;
 	reg32 &= ~(RCC_CR_HSIDIV_MASK << RCC_CR_HSIDIV_SHIFT);
-	RCC_CR = (reg32 | (div << RCC_CR_HSIDIV_SHIFT));
+	RCC_CR = (reg32 | (hsidiv << RCC_CR_HSIDIV_SHIFT));
 }
 
 /**
@@ -281,7 +281,8 @@ void rcc_clock_setup(const struct rcc_clock_scale *clock)
 {
 	flash_set_ws(FLASH_ACR_LATENCY_1WS);
 	
-	rcc_set_sysdiv(clock->sysdiv);
+	if (clock->sysclock_source == RCC_HSI48)
+		rcc_set_hsisys_div(clock->hsisys_div);
 
 	if(clock->flash_waitstates != FLASH_ACR_LATENCY_1WS)
 		flash_set_ws(clock->flash_waitstates);

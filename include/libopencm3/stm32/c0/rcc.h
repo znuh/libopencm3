@@ -598,7 +598,7 @@ enum rcc_periph_rst {
 struct rcc_clock_scale {
 	enum rcc_osc sysclock_source;
 
-	uint8_t sysdiv;
+	uint8_t hsisys_div;
 
 	uint8_t hpre;
 	uint8_t ppre;
@@ -633,7 +633,7 @@ enum rcc_osc rcc_system_clock_source(void);
 
 void rcc_set_ppre(uint32_t ppre);
 void rcc_set_hpre(uint32_t hpre);
-void rcc_set_sysdiv(uint32_t sysdiv);
+void rcc_set_hsisys_div(uint32_t sysdiv);
 void rcc_set_mcopre(uint32_t mcopre);
 
 void rcc_clock_setup(const struct rcc_clock_scale *clock);
