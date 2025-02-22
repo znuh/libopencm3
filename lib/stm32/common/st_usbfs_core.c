@@ -38,17 +38,14 @@ void st_usbfs_set_address(usbd_device *dev, uint8_t addr)
 }
 
 /**
- * Set the receive buffer size for a given USB endpoint.
+ * Determine number of rx blocks for given buffer size
  *
- * @param dev the usb device handle returned from @ref usbd_init
- * @param ep Index of endpoint to configure.
- * @param size Size in bytes of the RX buffer. Legal sizes : {2,4,6...62}; {64,96,128...992}.
- * @returns (uint16) Actual size set
+ * @param size Pointer to size in bytes (of the RX buffer. Legal sizes : {2,4,6...62}; {64,96,128...992}.)
+ * @returns (uint32) BLSIZE / NUM_BLOCK[4:0] (not shifted)
  */
-uint16_t st_usbfs_set_ep_rx_bufsize(usbd_device *dev, uint8_t ep, uint32_t size)
+static uint32_t bufsize_to_rxblocks(uint32_t *sizep)
 {
-	uint16_t realsize;
-	(void)dev;
+	uint32_t realsize, nblocks = *sizep;
 	/*
 	 * Writes USB_COUNTn_RX reg fields : bits <14:10> are NUM_BLOCK; bit 15 is BL_SIZE
 	 * - When (size <= 62), BL_SIZE is set to 0 and NUM_BLOCK set to (size / 2).
@@ -61,20 +58,19 @@ uint16_t st_usbfs_set_ep_rx_bufsize(usbd_device *dev, uint8_t ep, uint32_t size)
 	 *	61		0		31			62
 	 *	63		1		1			64
 	 */
-	if (size > 62) {
+	if (nblocks > 62) {
 		/* Round up, div by 32 and sub 1 == (size + 31)/32 - 1 == (size-1)/32)*/
-		size = ((size - 1) >> 5) & 0x1F;
-		realsize = (size + 1) << 5;
+		nblocks = ((nblocks - 1) >> 5) & 0x1F;
+		realsize = (nblocks + 1) << 5;
 		/* Set BL_SIZE bit (no macro for this) */
-		size |= (1<<5);
+		nblocks |= (1<<5);
 	} else {
 		/* round up and div by 2 */
-		size = (size + 1) >> 1;
-		realsize = size << 1;
+		nblocks = (nblocks + 1) >> 1;
+		realsize = nblocks << 1;
 	}
-	/* write to the BL_SIZE and NUM_BLOCK fields */
-	USB_SET_EP_RX_COUNT(ep, size << 10);	// move to device-specific fn
-	return realsize;
+	*sizep = realsize;
+	return nblocks;
 }
 
 void st_usbfs_ep_setup(usbd_device *dev, uint8_t addr, uint8_t type,
@@ -108,9 +104,10 @@ void st_usbfs_ep_setup(usbd_device *dev, uint8_t addr, uint8_t type,
 	}
 
 	if (!dir) {
-		uint16_t realsize;
+		uint32_t realsize = max_size;
 		USB_SET_EP_RX_ADDR(addr, dev->pm_top);	// move to device-specific fn
-		realsize = st_usbfs_set_ep_rx_bufsize(dev, addr, max_size);
+		/* write to the BL_SIZE and NUM_BLOCK fields */
+		USB_SET_EP_RX_COUNT(addr, bufsize_to_rxblocks(&realsize) << 10);	// move to device-specific fn
 		if (callback) {
 			dev->user_callback_ctr[addr][USB_TRANSACTION_OUT] =
 			    (void *)callback;
