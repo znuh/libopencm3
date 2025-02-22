@@ -268,7 +268,7 @@ void rcc_set_hpre(uint32_t hpre)
 }
 
 /**
- * @brief Configure HSI16 clock division factor to feed SYSCLK
+ * @brief Configure HSI48 clock division factor to feed SYSCLK
  * @param[in] hsidiv HSYSSIS clock division factor @ref rcc_cr_hsidiv
  */
 void rcc_set_hsisys_div(uint32_t hsidiv)
