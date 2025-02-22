@@ -56,10 +56,10 @@ void st_usbfs_poll(usbd_device *usbd_dev);
  *
  * @param ep_id Endpoint ID (0..7)
  * @param dir_tx 1 if TX endpoint, 0 for RX
- * @param ram_ofs RAM offset for packet buffer
+ * @param ram_ofs Pointer to RAM offset for packet buffer
  * @param rx_blocks BLSIZE / NUM_BLOCK[4:0] (shifted) for rxcount register - 0 for TX
  */
-void st_usbfs_assign_buffer(uint16_t ep_id, uint32_t dir_tx, uint16_t ram_ofs, uint16_t rx_blocks);
+void st_usbfs_assign_buffer(uint16_t ep_id, uint32_t dir_tx, uint16_t *ram_ofs, uint16_t rx_blocks);
 
 /**
  * Copy a data buffer from packet memory.
