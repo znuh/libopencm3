@@ -66,7 +66,7 @@ uint16_t st_usbfs_set_ep_rx_bufsize(usbd_device *dev, uint8_t ep, uint32_t size)
 		size = ((size - 1) >> 5) & 0x1F;
 		realsize = (size + 1) << 5;
 		/* Set BL_SIZE bit (no macro for this) */
-		size |= (1<<5);
+		size |= (1<<15);
 	} else {
 		/* round up and div by 2 */
 		size = (size + 1) >> 1;
