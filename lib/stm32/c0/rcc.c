@@ -57,6 +57,9 @@ const struct rcc_clock_scale rcc_clock_config[RCC_CLOCK_CONFIG_END] = {
 void rcc_osc_on(enum rcc_osc osc)
 {
 	switch (osc) {
+	case RCC_HSIUSB48:
+		RCC_CR |= RCC_CR_HSIUSB48ON;
+		break;
 	case RCC_HSE:
 		RCC_CR |= RCC_CR_HSEON;
 		break;
@@ -78,6 +81,9 @@ void rcc_osc_on(enum rcc_osc osc)
 void rcc_osc_off(enum rcc_osc osc)
 {
 	switch (osc) {
+	case RCC_HSIUSB48:
+		RCC_CR &= ~RCC_CR_HSIUSB48ON;
+		break;
 	case RCC_HSE:
 		RCC_CR &= ~RCC_CR_HSEON;
 		break;
@@ -99,6 +105,8 @@ void rcc_osc_off(enum rcc_osc osc)
 bool rcc_is_osc_ready(enum rcc_osc osc)
 {
 	switch (osc) {
+	case RCC_HSIUSB48:
+		return RCC_CR & RCC_CR_HSIUSB48RDY;
 	case RCC_HSE:
 		return RCC_CR & RCC_CR_HSERDY;
 	case RCC_HSI48:
