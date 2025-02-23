@@ -63,19 +63,19 @@ static usbd_device *st_usbfs_v3_usbd_init(void)
  * @param ram_ofs Pointer to RAM offset for packet buffer
  * @param rx_blocks BLSIZE / NUM_BLOCK[4:0] (shifted) for rxcount register - 0 for TX
  */
-/* TBD */
 void st_usbfs_assign_buffer(uint16_t ep_id, uint32_t dir_tx, uint16_t *ram_ofs, uint16_t rx_blocks) {
+	uint16_t ofs = (*ram_ofs + 3) & ~3;
+	*ram_ofs = ofs;
 	if(dir_tx)
-		USB_SET_EP_TX_ADDR(ep_id, *ram_ofs);
-	else {
-		USB_SET_EP_RX_ADDR(ep_id, *ram_ofs);
-		USB_SET_EP_RX_COUNT(ep_id, rx_blocks);
-	}
+		*USB_CHEP_TXRXBD(ep_id) = ofs;
+	else
+		*USB_CHEP_RXTXBD(ep_id) = (rx_blocks << 16) | ofs;
 }
 
 /* TBD */
 void st_usbfs_copy_to_pm(uint16_t ep_id, const void *buf, uint16_t len)
 {
+#if 0
 	/*
 	 * This is a bytewise copy, so it always works, even on CM0(+)
 	 * that don't support unaligned accesses.
@@ -87,6 +87,7 @@ void st_usbfs_copy_to_pm(uint16_t ep_id, const void *buf, uint16_t len)
 		*PM++ = (uint16_t)lbuf[i+1] << 8 | lbuf[i];
 	}
 	USB_SET_EP_TX_COUNT(ep_id, len);
+#endif
 }
 
 /**
@@ -99,6 +100,7 @@ void st_usbfs_copy_to_pm(uint16_t ep_id, const void *buf, uint16_t len)
 /* TBD */
 uint16_t st_usbfs_copy_from_pm(uint16_t ep_id, void *buf, uint16_t len)
 {
+#if 0
 	const volatile uint16_t *PM = (volatile void *)USB_GET_EP_RX_BUFF(ep_id);
 	uint16_t res = MIN(USB_GET_EP_RX_COUNT(ep_id) & 0x3ff, len);
 	uint8_t odd = res & 1;
@@ -120,6 +122,8 @@ uint16_t st_usbfs_copy_from_pm(uint16_t ep_id, void *buf, uint16_t len)
 		*(uint8_t *) buf = *(uint8_t *) PM;
 	}
 	return res;
+#endif
+	return 0;
 }
 
 static void st_usbfs_v3_disconnect(usbd_device *usbd_dev, bool disconnected)
