@@ -72,22 +72,28 @@ void st_usbfs_assign_buffer(uint16_t ep_id, uint32_t dir_tx, uint16_t *ram_ofs, 
 		*USB_CHEP_RXTXBD(ep_id) = (rx_blocks << 16) | ofs;
 }
 
-/* TBD */
 void st_usbfs_copy_to_pm(uint16_t ep_id, const void *buf, uint16_t len)
 {
-#if 0
-	/*
-	 * This is a bytewise copy, so it always works, even on CM0(+)
-	 * that don't support unaligned accesses.
-	 */
+	uint32_t buf_ofs = *USB_CHEP_TXRXBD(ep_id) & TXBD_ADDR_MASK;
+	volatile uint32_t *PM = (volatile uint32_t *) (USB_PMA_BASE + buf_ofs);
 	const uint8_t *lbuf = buf;
-	volatile uint16_t *PM = (volatile void *)USB_GET_EP_TX_BUFF(ep_id);
-	uint32_t i;
-	for (i = 0; i < len; i += 2) {
-		*PM++ = (uint16_t)lbuf[i+1] << 8 | lbuf[i];
+	uint32_t i,v;
+
+	for (v=i=0; i<len; i++, lbuf++) {
+		v<<=8;
+		v|=*lbuf;
+		if((i&3) == 3)
+			*PM++ = __builtin_bswap32(v);
 	}
-	USB_SET_EP_TX_COUNT(ep_id, len);
-#endif
+
+	// remainder?
+	i = i&3;
+	if(i) {
+		i = (4-i) << 3;
+		*PM = __builtin_bswap32(v<<i);
+	}
+
+	*USB_CHEP_TXRXBD(ep_id) = (len << TXBD_TXCOUNT_SHIFT) | buf_ofs;
 }
 
 /**
