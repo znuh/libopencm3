@@ -74,7 +74,7 @@ void st_usbfs_assign_buffer(uint16_t ep_id, uint32_t dir_tx, uint16_t *ram_ofs, 
 
 void st_usbfs_copy_to_pm(uint16_t ep_id, const void *buf, uint16_t len)
 {
-	uint32_t buf_ofs = *USB_CHEP_TXRXBD(ep_id) & TXBD_ADDR_MASK;
+	uint32_t buf_ofs = *USB_CHEP_TXRXBD(ep_id) & CHEP_BD_ADDR_MASK;
 	volatile uint32_t *PM = (volatile uint32_t *) (USB_PMA_BASE + buf_ofs);
 	const uint8_t *lbuf = buf;
 	uint32_t i,v;
@@ -93,7 +93,7 @@ void st_usbfs_copy_to_pm(uint16_t ep_id, const void *buf, uint16_t len)
 		*PM = __builtin_bswap32(v<<i);
 	}
 
-	*USB_CHEP_TXRXBD(ep_id) = (len << TXBD_TXCOUNT_SHIFT) | buf_ofs;
+	*USB_CHEP_TXRXBD(ep_id) = (len << CHEP_BD_COUNT_SHIFT) | buf_ofs;
 }
 
 /**
@@ -103,33 +103,20 @@ void st_usbfs_copy_to_pm(uint16_t ep_id, const void *buf, uint16_t len)
  * @param buf Destination pointer for data buffer.
  * @param len Number of bytes to copy.
  */
-/* TBD */
 uint16_t st_usbfs_copy_from_pm(uint16_t ep_id, void *buf, uint16_t len)
 {
-#if 0
-	const volatile uint16_t *PM = (volatile void *)USB_GET_EP_RX_BUFF(ep_id);
-	uint16_t res = MIN(USB_GET_EP_RX_COUNT(ep_id) & 0x3ff, len);
-	uint8_t odd = res & 1;
-	len = res >> 1;
+	uint32_t v, i, buf_desc = *USB_CHEP_RXTXBD(ep_id);
+	uint32_t count = (buf_desc >> CHEP_BD_COUNT_SHIFT) & CHEP_BD_COUNT_MASK;
+	volatile uint32_t *PM = (volatile uint32_t *) (USB_PMA_BASE + (buf_desc & CHEP_BD_ADDR_MASK));
+	uint8_t *dst = buf;
 
-	if (((uintptr_t) buf) & 0x01) {
-		for (; len; PM++, len--) {
-			uint16_t value = *PM;
-			*(uint8_t *) buf++ = value;
-			*(uint8_t *) buf++ = value >> 8;
-		}
-	} else {
-		for (; len; PM++, buf += 2, len--) {
-			*(uint16_t *) buf = *PM;
-		}
+	count = MIN(count, len);
+	for(v=i=0; i<count; i++, dst++, v>>=8) {
+		if(!(i&3))
+			v = *PM++; // bswap32??
+		*dst = v&0xff;
 	}
-
-	if (odd) {
-		*(uint8_t *) buf = *(uint8_t *) PM;
-	}
-	return res;
-#endif
-	return 0;
+	return count;
 }
 
 static void st_usbfs_v3_disconnect(usbd_device *usbd_dev, bool disconnected)

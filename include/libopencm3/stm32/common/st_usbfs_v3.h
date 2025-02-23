@@ -80,8 +80,9 @@
 #define USB_CHEP_TXRXBD(EP) \
 	((uint32_t *)(USB_PMA_BASE + ((EP) * 8 + 0) * 1))
 
-#define TXBD_ADDR_MASK 		0xffff
-#define TXBD_TXCOUNT_SHIFT	16
+#define CHEP_BD_ADDR_MASK 		0xffff
+#define CHEP_BD_COUNT_SHIFT		16
+#define CHEP_BD_COUNT_MASK		0x3ff
 
 #define USB_CHEP_RXTXBD(EP) \
 	((uint32_t *)(USB_PMA_BASE + ((EP) * 8 + 4) * 1))
