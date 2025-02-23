@@ -379,10 +379,11 @@ static uint32_t rcc_get_clksel_freq(uint8_t shift) {
  */
 uint32_t rcc_get_usart_clk_freq(uint32_t usart)
 {
-	if (usart == USART1_BASE) {
+	/* TBD */
+	if (usart == USART1_BASE)
 		return rcc_get_clksel_freq(RCC_CCIPR_USART1SEL_SHIFT);
-	}
-	cm3_assert_not_reached();
+	else
+		return rcc_apb1_frequency;
 }
 
 /*---------------------------------------------------------------------------*/
