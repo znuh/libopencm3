@@ -623,6 +623,7 @@ void rcc_css_int_clear(void);
 int rcc_css_int_flag(void);
 
 void rcc_set_sysclk_source(enum rcc_osc osc);
+enum rcc_osc rcc_get_usbclk_source(void);
 void rcc_set_usbclk_source(enum rcc_osc clk);
 void rcc_wait_for_sysclk_status(enum rcc_osc osc);
 enum rcc_osc rcc_system_clock_source(void);

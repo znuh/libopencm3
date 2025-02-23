@@ -20,6 +20,7 @@
 
 #include <libopencm3/cm3/common.h>
 #include <libopencm3/stm32/rcc.h>
+#include <libopencm3/stm32/crs.h>
 #include <libopencm3/stm32/tools.h>
 #include <libopencm3/stm32/st_usbfs.h>
 #include <libopencm3/usb/usbd.h>
@@ -30,6 +31,13 @@
 static usbd_device *st_usbfs_v3_usbd_init(void)
 {
 	uint32_t t_startup = 32;
+
+	/* make things easier for user by handling sane defaults */
+	if(rcc_get_usbclk_source() == RCC_HSIUSB48) {
+		rcc_osc_on(RCC_HSIUSB48);
+		rcc_wait_for_osc_ready(RCC_HSIUSB48);
+		crs_autotrim_usb_enable();
+	}
 
 	/* we need to keep reset enabled for t_STARTUP after 
 	 * clearing powerdown or the transceiver won't work yet
