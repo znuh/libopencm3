@@ -72,6 +72,7 @@ void st_usbfs_assign_buffer(uint16_t ep_id, uint32_t dir_tx, uint16_t *ram_ofs, 
 		*USB_CHEP_RXTXBD(ep_id) = (rx_blocks << 16) | ofs;
 }
 
+// NOTE: this seems to be sorta ok? (byteorder fine also)
 void st_usbfs_copy_to_pm(uint16_t ep_id, const void *buf, uint16_t len)
 {
 	uint32_t buf_ofs = *USB_CHEP_TXRXBD(ep_id) & CHEP_BD_ADDR_MASK;
@@ -103,6 +104,7 @@ void st_usbfs_copy_to_pm(uint16_t ep_id, const void *buf, uint16_t len)
  * @param buf Destination pointer for data buffer.
  * @param len Number of bytes to copy.
  */
+// NOTE: this seems to be sorta ok? (byteorder fine also)
 uint16_t st_usbfs_copy_from_pm(uint16_t ep_id, void *buf, uint16_t len)
 {
 	uint32_t v, i, buf_desc = *USB_CHEP_RXTXBD(ep_id);
@@ -113,7 +115,7 @@ uint16_t st_usbfs_copy_from_pm(uint16_t ep_id, void *buf, uint16_t len)
 	count = MIN(count, len);
 	for(v=i=0; i<count; i++, dst++, v>>=8) {
 		if(!(i&3))
-			v = *PM++; // bswap32??
+			v = *PM++;
 		*dst = v&0xff;
 	}
 	return count;
