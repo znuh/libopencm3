@@ -67,7 +67,8 @@ static uint32_t bufsize_to_rxblocks(uint32_t *sizep)
 	} else {
 		/* round up and div by 2 */
 		nblocks = (nblocks + 1) >> 1;
-		realsize = nblocks << 1;
+		/* round up real size to 32 Bit words - needed for st_usbfs_v3 */
+		realsize = ((nblocks << 1) + 3) & (~3);
 	}
 	*sizep = realsize;
 	return nblocks;
