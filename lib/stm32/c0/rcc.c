@@ -179,6 +179,10 @@ void rcc_set_sysclk_source(enum rcc_osc osc)
 	RCC_CFGR = (reg32 | (sw << RCC_CFGR_SW_SHIFT));
 }
 
+enum rcc_osc rcc_get_usbclk_source(void) {
+	return (RCC_CCIPR2 & RCC_CCIPR2_USBSEL) ? RCC_HSE : RCC_HSIUSB48;
+}
+
 /*---------------------------------------------------------------------------*/
 /** @brief RCC Set the Source for the USB Clock.
  *
