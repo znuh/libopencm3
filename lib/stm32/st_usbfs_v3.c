@@ -30,7 +30,8 @@
 /** Initialize the USB device controller hardware of the STM32. */
 static usbd_device *st_usbfs_v3_usbd_init(void)
 {
-	uint32_t t_startup = 32;
+	volatile uint32_t *BD = (volatile uint32_t *) USB_PMA_BASE; // buffer descriptors table
+	uint32_t n_descriptors = 2 * 8; // CHEP_TXRXBD + CHEP_RXTXBD for each of the 8 CHEPs
 
 	/* make things easier for user by handling sane defaults */
 	if(rcc_get_usbclk_source() == RCC_HSIUSB48) {
@@ -47,10 +48,10 @@ static usbd_device *st_usbfs_v3_usbd_init(void)
 	SET_REG(USB_CNTR_REG, USB_CNTR_FRES);
 
 	/* datasheet states t_STARTUP: 1us
-	 * we just wait 36 iterations with >= 2 cycles per iteration */
+	 * we use this waiting time to clean up the PAM buffer table */
 	do {
-		__asm__("nop");
-	} while(--t_startup);
+		*BD++ = USBRAM_SIZE; // set ADDR to USBRAM end, NUM_BLOCK / COUNT to zero
+	} while(--n_descriptors);
 
 	rcc_periph_clock_enable(RCC_USB);
 	SET_REG(USB_CNTR_REG, 0);

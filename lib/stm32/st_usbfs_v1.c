@@ -71,6 +71,7 @@ void st_usbfs_assign_buffer(uint16_t ep_id, uint32_t dir_tx, uint16_t *ram_ofs, 
 	}
 }
 
+/* TODO: prevent out-of-bounds read for odd length */
 void st_usbfs_copy_to_pm(uint16_t ep_id, const void *buf, uint16_t len)
 {
 	const uint16_t *lbuf = buf;

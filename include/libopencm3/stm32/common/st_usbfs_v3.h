@@ -87,6 +87,8 @@
 #define USB_CHEP_RXTXBD(EP) \
 	((uint32_t *)(USB_PMA_BASE + ((EP) * 8 + 4) * 1))
 
+#define USBRAM_SIZE				2048
+
 #endif
 /** @cond */
 #else
