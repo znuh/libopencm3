@@ -17,6 +17,11 @@
 ## along with this library.  If not, see <http://www.gnu.org/licenses/>.
 ##
 
+# TODOs:
+# - add/check rcc functions - e.g. for kernel clocks
+# - add missing peripherals
+# - add missing STM32C0 devices to devices.data
+
 LIBNAME		= libopencm3_stm32c0
 SRCLIBDIR	?= ../..
 
