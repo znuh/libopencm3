@@ -36,10 +36,10 @@
 #       include <libopencm3/stm32/l1/syscfg.h>
 #elif defined(STM32L4)
 #       include <libopencm3/stm32/l4/syscfg.h>
-#elif defined(STM32G0)
-#       include <libopencm3/stm32/g0/syscfg.h>
 #elif defined(STM32C0)
 #       include <libopencm3/stm32/c0/syscfg.h>
+#elif defined(STM32G0)
+#       include <libopencm3/stm32/g0/syscfg.h>
 #elif defined(STM32G4)
 #       include <libopencm3/stm32/g4/syscfg.h>
 #elif defined(STM32H7)
