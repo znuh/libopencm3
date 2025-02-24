@@ -80,7 +80,7 @@ void st_usbfs_assign_buffer(uint16_t ep_id, uint32_t dir_tx, uint16_t *ram_ofs, 
 		*USB_CHEP_RXTXBD(ep_id) = (rx_blocks << 16) | ofs;
 }
 
-// NOTE: this seems to be sorta ok? (byteorder fine also)
+/* NOTE: could check if src buf is 32-Bit aligned (!(buf&3)) and do a faster copy then */
 void st_usbfs_copy_to_pm(uint16_t ep_id, const void *buf, uint16_t len)
 {
 	uint32_t buf_ofs = *USB_CHEP_TXRXBD(ep_id) & CHEP_BD_ADDR_MASK;
@@ -112,7 +112,7 @@ void st_usbfs_copy_to_pm(uint16_t ep_id, const void *buf, uint16_t len)
  * @param buf Destination pointer for data buffer.
  * @param len Number of bytes to copy.
  */
-// NOTE: this seems to be sorta ok? (byteorder fine also)
+/* NOTE: could check if dst buf is 32-Bit aligned (!(buf&3)) and do a faster copy then */
 uint16_t st_usbfs_copy_from_pm(uint16_t ep_id, void *buf, uint16_t len)
 {
 	uint32_t v, i, buf_desc = *USB_CHEP_RXTXBD(ep_id);
