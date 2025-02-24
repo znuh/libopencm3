@@ -45,6 +45,8 @@ static usbd_device *st_usbfs_v3_usbd_init(void)
 		crs_autotrim_usb_enable();
 	}
 
+	rcc_periph_clock_enable(RCC_USB);
+
 	/* we need to keep reset enabled for t_STARTUP after 
 	 * clearing powerdown or the transceiver won't work yet
 	 * 
@@ -58,7 +60,6 @@ static usbd_device *st_usbfs_v3_usbd_init(void)
 		*BD++ = USBRAM_SIZE; // set ADDR to USBRAM end, NUM_BLOCK / COUNT to zero
 	} while(--n_descriptors);
 
-	rcc_periph_clock_enable(RCC_USB);
 	SET_REG(USB_CNTR_REG, 0);
 	SET_REG(USB_ISTR_REG, 0);
 
