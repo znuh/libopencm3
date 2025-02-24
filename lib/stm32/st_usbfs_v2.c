@@ -58,7 +58,6 @@ void st_usbfs_assign_buffer(uint16_t ep_id, uint32_t dir_tx, uint16_t *ram_ofs, 
 	}
 }
 
-/* TODO: prevent out-of-bounds read for odd length */
 void st_usbfs_copy_to_pm(uint16_t ep_id, const void *buf, uint16_t len)
 {
 	/*
@@ -67,10 +66,17 @@ void st_usbfs_copy_to_pm(uint16_t ep_id, const void *buf, uint16_t len)
 	 */
 	const uint8_t *lbuf = buf;
 	volatile uint16_t *PM = (volatile void *)USB_GET_EP_TX_BUFF(ep_id);
-	uint32_t i;
-	for (i = 0; i < len; i += 2) {
-		*PM++ = (uint16_t)lbuf[i+1] << 8 | lbuf[i];
+	uint32_t n_words = len >> 1;
+
+	/* copy complete words */
+	for(;n_words;n_words--,lbuf+=2) {
+		*PM++ = (uint16_t)lbuf[1] << 8 | *lbuf;
 	}
+
+	/* copy remaining byte if odd length */
+	if(len&1)
+		*PM = *lbuf;
+
 	USB_SET_EP_TX_COUNT(ep_id, len);
 }
 
