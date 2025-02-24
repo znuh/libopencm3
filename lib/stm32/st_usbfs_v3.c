@@ -28,6 +28,10 @@
 #include "../usb/usb_private.h"
 #include "common/st_usbfs_core.h"
 
+#define MAX_ENDPOINTS	8
+
+static uint16_t txbuf_addr[MAX_ENDPOINTS];
+
 /** Initialize the USB device controller hardware of the STM32. */
 static usbd_device *st_usbfs_v3_usbd_init(void)
 {
@@ -77,7 +81,7 @@ void st_usbfs_assign_buffer(uint16_t ep_id, uint32_t dir_tx, uint16_t *ram_ofs, 
 	uint16_t ofs = (*ram_ofs + 3) & ~3;
 	*ram_ofs = ofs;
 	if(dir_tx)
-		*USB_CHEP_TXRXBD(ep_id) = ofs;
+		txbuf_addr[ep_id] = ofs;
 	else
 		*USB_CHEP_RXTXBD(ep_id) = (rx_blocks << 16) | ofs;
 }
@@ -85,7 +89,7 @@ void st_usbfs_assign_buffer(uint16_t ep_id, uint32_t dir_tx, uint16_t *ram_ofs, 
 /* NOTE: could check if src buf is 32-Bit aligned (!(buf&3)) and do a faster copy then */
 void st_usbfs_copy_to_pm(uint16_t ep_id, const void *buf, uint16_t len)
 {
-	uint32_t buf_ofs = *USB_CHEP_TXRXBD(ep_id) & CHEP_BD_ADDR_MASK;
+	uint32_t buf_ofs = txbuf_addr[ep_id];
 	volatile uint32_t *PM = (volatile uint32_t *) (USB_PMA_BASE + buf_ofs);
 	const uint8_t *lbuf = buf;
 	uint32_t i,v;
