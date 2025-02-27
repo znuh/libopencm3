@@ -89,6 +89,8 @@
 
 #define USBRAM_SIZE				2048
 
+#define	ST_USBFS_DRIVER			&st_usbfs_v3_usb_driver
+
 #endif
 /** @cond */
 #else

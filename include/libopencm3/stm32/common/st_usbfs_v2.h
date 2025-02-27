@@ -117,6 +117,8 @@
 #define USB_GET_EP_RX_BUFF(EP) \
 	(USB_PMA_BASE + (uint8_t *)(USB_GET_EP_RX_ADDR(EP) * 1))
 
+#define	ST_USBFS_DRIVER			&st_usbfs_v2_usb_driver
+
 #endif
 /** @cond */
 #else
