@@ -338,6 +338,10 @@ void rcc_clock_setup(const struct rcc_clock_scale *clock)
 	rcc_apb1_frequency = clock->apb_frequency;
 }
 
+void rcc_clock_setup_in_hsi48_out_48mhz(void) {
+	rcc_clock_setup(&rcc_clock_config[RCC_CLOCK_CONFIG_HSI_48MHZ]);
+}
+
 /**
  * @brief Set the peripheral clock source
  * @param periph peripheral of choice, eg XXX_BASE

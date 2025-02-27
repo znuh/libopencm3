@@ -634,6 +634,7 @@ void rcc_set_hsisys_div(uint32_t sysdiv);
 void rcc_set_mcopre(uint32_t mcopre);
 
 void rcc_clock_setup(const struct rcc_clock_scale *clock);
+void rcc_clock_setup_in_hsi48_out_48mhz(void);
 
 void rcc_set_peripheral_clk_sel(uint32_t periph, uint32_t sel);
 uint32_t rcc_get_usart_clk_freq(uint32_t usart);

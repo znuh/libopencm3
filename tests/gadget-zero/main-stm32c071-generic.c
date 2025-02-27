@@ -51,7 +51,7 @@ void delay_us(uint16_t us) {(void)us;}
 
 int main(void)
 {
-	rcc_clock_setup(&rcc_clock_config[RCC_CLOCK_CONFIG_HSI_48MHZ]);
+	rcc_clock_setup_in_hsi48_out_48mhz();
 	crs_autotrim_usb_enable();
 	rcc_set_usbclk_source(RCC_HSIUSB48);
 
