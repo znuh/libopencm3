@@ -21,7 +21,12 @@
 
 #include <libopencm3/cm3/common.h>
 #include <libopencm3/stm32/rcc.h>
+
+/* check if Clock Recovery System is available */
+#ifdef CRS_BASE
 #include <libopencm3/stm32/crs.h>
+#endif
+
 #include <libopencm3/stm32/tools.h>
 #include <libopencm3/stm32/st_usbfs.h>
 #include <libopencm3/usb/usbd.h>
@@ -38,12 +43,14 @@ static usbd_device *st_usbfs_v3_usbd_init(void)
 	volatile uint32_t *BD = (volatile uint32_t *) USB_PMA_BASE; // buffer descriptors table
 	uint32_t n_descriptors = 2 * 8; // CHEP_TXRXBD + CHEP_RXTXBD for each of the 8 CHEPs
 
+#if defined(STM32C0)
 	/* make things easier for user by handling sane defaults */
 	if(rcc_get_usbclk_source() == RCC_HSIUSB48) {
 		rcc_osc_on(RCC_HSIUSB48);
 		rcc_wait_for_osc_ready(RCC_HSIUSB48);
 		crs_autotrim_usb_enable();
 	}
+#endif
 
 	rcc_periph_clock_enable(RCC_USB);
 
