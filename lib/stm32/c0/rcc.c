@@ -372,8 +372,15 @@ void rcc_set_peripheral_clk_sel(uint32_t periph, uint32_t sel)
 	RCC_CCIPR = reg32 | (sel << shift);
 }
 
+/* TBD:
+ * - USB in CCIPR2
+ * - I2C1/2
+ * - ADC
+ * - HSIKER div
+ * - HSE
+ * - etc. ?
+ */
 static uint32_t rcc_get_clksel_freq(uint8_t shift) {
-	/* TBD: USB in CCIPR2 */
 	uint8_t clksel = (RCC_CCIPR >> shift) & RCC_CCIPR_USARTxSEL_MASK;
 	uint8_t hpre = (RCC_CFGR >> RCC_CFGR_HPRE_SHIFT) & RCC_CFGR_HPRE_MASK;
 	switch (clksel) {
@@ -395,7 +402,6 @@ static uint32_t rcc_get_clksel_freq(uint8_t shift) {
  */
 uint32_t rcc_get_usart_clk_freq(uint32_t usart)
 {
-	/* TBD */
 	if (usart == USART1_BASE)
 		return rcc_get_clksel_freq(RCC_CCIPR_USART1SEL_SHIFT);
 	else
@@ -417,6 +423,7 @@ uint32_t rcc_get_timer_clk_freq(uint32_t timer __attribute__((unused)))
 /** @brief Get the peripheral clock speed for the I2C device at base specified.
  * @param i2c  Base address of I2C to get clock frequency for.
  */
+#if 0	/* TBD */
 uint32_t rcc_get_i2c_clk_freq(uint32_t i2c)
 {
 	if (i2c == I2C1_BASE) {
@@ -426,6 +433,7 @@ uint32_t rcc_get_i2c_clk_freq(uint32_t i2c)
 	}
 	cm3_assert_not_reached();
 }
+#endif
 
 /*---------------------------------------------------------------------------*/
 /** @brief Get the peripheral clock speed for the SPI device at base specified.
