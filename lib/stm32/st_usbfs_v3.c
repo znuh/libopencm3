@@ -19,6 +19,8 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/* Note: could check for (un)aligned access being prohibited with defined(__ARM_ARCH_6M__) */
+
 #include <libopencm3/cm3/common.h>
 #include <libopencm3/stm32/rcc.h>
 
