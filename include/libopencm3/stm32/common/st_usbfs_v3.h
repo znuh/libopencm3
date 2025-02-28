@@ -87,8 +87,6 @@
 #define USB_CHEP_RXTXBD(EP) \
 	((uint32_t *)(USB_PMA_BASE + ((EP) * 8 + 4) * 1))
 
-#define USBRAM_SIZE				2048
-
 #define	ST_USBFS_DRIVER			&st_usbfs_v3_usb_driver
 
 #endif

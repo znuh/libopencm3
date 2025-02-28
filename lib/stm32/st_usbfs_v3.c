@@ -66,7 +66,7 @@ static usbd_device *st_usbfs_v3_usbd_init(void)
 	/* datasheet states t_STARTUP: 1us
 	 * we use this waiting time to clean up the PAM buffer table */
 	do {
-		*BD++ = USBRAM_SIZE; // set ADDR to USBRAM end, NUM_BLOCK / COUNT to zero
+		*BD++ = USB_PMA_SIZE; // set ADDR to USB PRAM end, NUM_BLOCK / COUNT to zero
 	} while(--n_descriptors);
 
 	SET_REG(USB_CNTR_REG, 0);
