@@ -128,6 +128,20 @@ void st_usbfs_copy_to_pm(uint16_t ep_id, const void *buf, uint16_t len)
  * @param buf Destination pointer for data buffer.
  * @param len Number of bytes to copy.
  */
+/* ERRATUM for STM32C071x8/xB (ES0618 - Rev 1):
+ *  Buffer description table update completes after CTR interrupt triggers
+ * Description:
+ *  During OUT transfers, the correct transfer interrupt (CTR) is triggered a little before the last USB SRAM accesses
+ *  have completed. If the software responds quickly to the interrupt, the full buffer contents may not be correct.
+ * Workaround:
+ *  Software should ensure that a small delay is included before accessing the SRAM contents. This delay should be
+ *  800 ns in Full Speed mode and 6.4 μs in Low Speed mode.
+ * ---------------------------------------------------------------------------------------------------------------------
+ * At 48MHz the delay needed is 39 cycles.
+ * Counting instruction cycles in the disassembly from st_usbfs_poll: istr = *USB_ISTR_REG
+ * to this function entry takes >50 cycles, so no delay needed here for Full Speed.
+ * Will fail for Low Speed mode, but LS mode is too exotic to justify a synthetic delay here.
+ */
 /* NOTE: could check if dst buf is 32-Bit aligned (!(buf&3)) and do a faster copy then */
 uint16_t st_usbfs_copy_from_pm(uint16_t ep_id, void *buf, uint16_t len)
 {
