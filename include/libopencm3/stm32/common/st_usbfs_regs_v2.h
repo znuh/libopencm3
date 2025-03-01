@@ -17,20 +17,19 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* THIS FILE SHOULD NOT BE INCLUDED DIRECTLY !
- * Use top-level <libopencm3/stm32/st_usbfs.h>
- */
-
 /** @cond */
 #ifdef LIBOPENCM3_ST_USBFS_H
 /** @endcond */
-#ifndef LIBOPENCM3_ST_USBFS_V3_H
-#define LIBOPENCM3_ST_USBFS_V3_H
+#ifndef LIBOPENCM3_ST_USBFS_REGS_V2_H
+#define LIBOPENCM3_ST_USBFS_REGS_V2_H
+
+/* This file defines additional registers and Bits added in v2 of the USB 
+ * peripheral without touching any other BTABLE / USBRAM stuff.
+ * USB peripheral v3 also has these registers. Therefore, the basic idea
+ * is to just include this file (st_usbfs_regs_v2.h) in the v3 definitions
+ * instead of duplicating the LPM / BCD definitions for v3. */
 
 #include <libopencm3/stm32/common/st_usbfs_common.h>
-
-/* include additional registers (LPM and BCD) inherited from USB v2 peripheral */
-#include <libopencm3/stm32/common/st_usbfs_regs_v2.h>
 
 /*****************************************************************************/
 /* Module definitions                                                        */
@@ -40,27 +39,48 @@
 /* Register definitions                                                      */
 /*****************************************************************************/
 
+/* USB Buffer table address register */
+#define USB_LPMCSR_REG		(&MMIO32(USB_DEV_FS_BASE + 0x54))
+#define USB_BCDR_REG		(&MMIO32(USB_DEV_FS_BASE + 0x58))
+
 /*****************************************************************************/
 /* Register values                                                           */
 /*****************************************************************************/
 
-/* --- Channel/endpoint buffer descriptors  -------------------------------- */
+/* --- USB control register masks / bits ----------------------------------- */
 
-#define USB_CHEP_TXRXBD(EP) \
-	((uint32_t *)(USB_PMA_BASE + ((EP) * 8 + 0) * 1))
+#define USB_CNTR_L1REQM		(1 << 7)
+#define USB_CNTR_L1RESUME	(1 << 5)
 
-#define CHEP_BD_ADDR_MASK 				0xffff
-#define CHEP_BD_COUNT_SHIFT				16
-#define CHEP_BD_COUNT_MASK				0x3ff
+/* --- USB interrupt status register masks / bits -------------------------- */
 
-#define USB_CHEP_RXTXBD(EP) \
-	((uint32_t *)(USB_PMA_BASE + ((EP) * 8 + 4) * 1))
+#define USB_ISTR_L1REQ		(1 << 7)
 
-#define	ST_USBFS_DRIVER					&st_usbfs_v3_usb_driver
+/* --- LPM control and status register USB_LPMCSR Values --------------------*/
+
+#define USB_LPMCSR_BESL_SHIFT	4
+#define USB_LPMCSR_BESL		(15 << USB_LPMCSR_BESL_SHIFT)
+
+#define USB_LPMCSR_REMWAKE	(1 << 3)
+#define USB_LPMCSR_LPMACK	(1 << 1)
+#define USB_LPMCSR_LPMEN	(1 << 0)
+
+/* --- Battery Charging Detector Values ----------------------------------------------------------*/
+
+#define USB_BCDR_DPPU		(1 << 15)
+#define USB_BCDR_PS2DET		(1 << 7)
+#define USB_BCDR_SDET		(1 << 6)
+#define USB_BCDR_PDET		(1 << 5)
+#define USB_BCDR_DCDET		(1 << 4)
+#define USB_BCDR_SDEN		(1 << 3)
+#define USB_BCDR_PDEN		(1 << 2)
+#define USB_BCDR_DCDEN		(1 << 1)
+#define USB_BCDR_BCDEN		(1 << 0)
 
 #endif
 /** @cond */
 #else
-#error "st_usbfs_v3.h should not be included directly, only via st_usbfs.h"
+#error "st_usbfs_regs_v2.h should not be included directly, only via st_usbfs.h"
 #endif
 /** @endcond */
+
