@@ -60,6 +60,8 @@
 
 /* --- USB BTABLE Registers ------------------------------------------------ */
 
+/* Dedicated packet buffer memory SRAM access scheme: 1 x 16 bits / word (see RM) */
+
 #define USB_EP_TX_ADDR(EP) \
 	((uint32_t *)(USB_PMA_BASE + (USB_GET_BTABLE + (EP) * 8 + 0) * 2))
 

@@ -46,6 +46,8 @@
 
 /* --- Channel/endpoint buffer descriptors  -------------------------------- */
 
+/* Dedicated packet buffer memory SRAM access scheme: 32 bits (see RM) */
+
 #define USB_CHEP_TXRXBD(EP) \
 	((uint32_t *)(USB_PMA_BASE + ((EP) * 8 + 0) * 1))
 
