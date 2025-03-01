@@ -20,14 +20,12 @@
 /** @cond */
 #ifdef LIBOPENCM3_ST_USBFS_H
 /** @endcond */
-#ifndef LIBOPENCM3_ST_USBFS_REGS_V2_H
-#define LIBOPENCM3_ST_USBFS_REGS_V2_H
+#ifndef LIBOPENCM3_ST_USBFS_EXT_H
+#define LIBOPENCM3_ST_USBFS_EXT_H
 
-/* This file defines additional registers and Bits added in v2 of the USB 
- * peripheral without touching any other BTABLE / USBRAM stuff.
- * USB peripheral v3 also has these registers. Therefore, the basic idea
- * is to just include this file (st_usbfs_regs_v2.h) in the v3 definitions
- * instead of duplicating the LPM / BCD definitions for v3. */
+/* This file defines additional registers and Bits added/removed in different
+ * versions of the USB peripheral.
+ */
 
 #include <libopencm3/stm32/common/st_usbfs_common.h>
 
@@ -39,9 +37,18 @@
 /* Register definitions                                                      */
 /*****************************************************************************/
 
-/* USB Buffer table address register */
+#ifdef ST_USBFS_HAVE_LPM
 #define USB_LPMCSR_REG		(&MMIO32(USB_DEV_FS_BASE + 0x54))
+#endif
+
+#ifdef ST_USBFS_HAVE_BCD
 #define USB_BCDR_REG		(&MMIO32(USB_DEV_FS_BASE + 0x58))
+#endif
+
+#ifdef ST_USBFS_HAVE_BTADDR
+/* USB Buffer table address register */
+#define USB_BTABLE_REG		(&MMIO32(USB_DEV_FS_BASE + 0x50))
+#endif
 
 /*****************************************************************************/
 /* Register values                                                           */
@@ -49,6 +56,7 @@
 
 /* --- USB control register masks / bits ----------------------------------- */
 
+#ifdef ST_USBFS_HAVE_LPM
 #define USB_CNTR_L1REQM		(1 << 7)
 #define USB_CNTR_L1RESUME	(1 << 5)
 
@@ -64,9 +72,10 @@
 #define USB_LPMCSR_REMWAKE	(1 << 3)
 #define USB_LPMCSR_LPMACK	(1 << 1)
 #define USB_LPMCSR_LPMEN	(1 << 0)
+#endif
 
+#ifdef ST_USBFS_HAVE_BCD
 /* --- Battery Charging Detector Values ----------------------------------------------------------*/
-
 #define USB_BCDR_DPPU		(1 << 15)
 #define USB_BCDR_PS2DET		(1 << 7)
 #define USB_BCDR_SDET		(1 << 6)
@@ -76,6 +85,12 @@
 #define USB_BCDR_PDEN		(1 << 2)
 #define USB_BCDR_DCDEN		(1 << 1)
 #define USB_BCDR_BCDEN		(1 << 0)
+#endif
+
+#ifdef ST_USBFS_HAVE_BTADDR
+/* --- USB BTABLE registers ------------------------------------------------ */
+#define USB_GET_BTABLE		GET_REG16(USB_BTABLE_REG)
+#endif
 
 #endif
 /** @cond */

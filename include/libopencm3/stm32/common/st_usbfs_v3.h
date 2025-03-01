@@ -29,8 +29,10 @@
 
 #include <libopencm3/stm32/common/st_usbfs_common.h>
 
-/* include additional registers (LPM and BCD) inherited from USB v2 peripheral */
-#include <libopencm3/stm32/common/st_usbfs_regs_v2.h>
+/* enable and include additional registers (LPM and BCD) for USB v3 peripheral */
+#define ST_USBFS_HAVE_LPM
+#define ST_USBFS_HAVE_BCD
+#include <libopencm3/stm32/common/st_usbfs_ext.h>
 
 /*****************************************************************************/
 /* Module definitions                                                        */

@@ -36,16 +36,13 @@
 
 #include <libopencm3/stm32/common/st_usbfs_common.h>
 
+/* enable and include BTADDR register for USB v1 peripheral */
+#define ST_USBFS_HAVE_BTADDR
+#include <libopencm3/stm32/common/st_usbfs_ext.h>
+
 /*****************************************************************************/
 /* Register definitions                                                      */
 /*****************************************************************************/
-
-/* USB Buffer table address register */
-#define USB_BTABLE_REG		(&MMIO32(USB_DEV_FS_BASE + 0x50))
-
-/* --- USB BTABLE registers ------------------------------------------------ */
-
-#define USB_GET_BTABLE		GET_REG16(USB_BTABLE_REG)
 
 /* --- USB BTABLE manipulators --------------------------------------------- */
 
