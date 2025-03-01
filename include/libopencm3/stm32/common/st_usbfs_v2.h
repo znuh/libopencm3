@@ -67,16 +67,16 @@
 /* Dedicated packet buffer memory SRAM access scheme: 2 x 16 bits / word (see RM) */
 
 #define USB_EP_TX_ADDR(EP) \
-	((uint16_t *)(USB_PMA_BASE + (USB_GET_BTABLE + (EP) * 8 + 0) * 1))
+	((uint16_t *)(USB_PMA_BASE + (USB_BTABLE_OFS + (EP) * 8 + 0) * 1))
 
 #define USB_EP_TX_COUNT(EP) \
-	((uint16_t *)(USB_PMA_BASE + (USB_GET_BTABLE + (EP) * 8 + 2) * 1))
+	((uint16_t *)(USB_PMA_BASE + (USB_BTABLE_OFS + (EP) * 8 + 2) * 1))
 
 #define USB_EP_RX_ADDR(EP) \
-	((uint16_t *)(USB_PMA_BASE + (USB_GET_BTABLE + (EP) * 8 + 4) * 1))
+	((uint16_t *)(USB_PMA_BASE + (USB_BTABLE_OFS + (EP) * 8 + 4) * 1))
 
 #define USB_EP_RX_COUNT(EP) \
-	((uint16_t *)(USB_PMA_BASE + (USB_GET_BTABLE + (EP) * 8 + 6) * 1))
+	((uint16_t *)(USB_PMA_BASE + (USB_BTABLE_OFS + (EP) * 8 + 6) * 1))
 
 /* --- USB BTABLE manipulators --------------------------------------------- */
 

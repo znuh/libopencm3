@@ -90,6 +90,7 @@
 #ifdef ST_USBFS_HAVE_BTADDR
 /* --- USB BTABLE registers ------------------------------------------------ */
 #define USB_GET_BTABLE		GET_REG16(USB_BTABLE_REG)
+#define USB_BTABLE_OFS		0	/* place BTABLE at start of packet RAM */
 #endif
 
 #endif

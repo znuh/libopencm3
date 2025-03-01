@@ -46,7 +46,7 @@ static usbd_device *st_usbfs_v1_usbd_init(void)
 {
 	rcc_periph_clock_enable(RCC_USB);
 	SET_REG(USB_CNTR_REG, 0);
-	SET_REG(USB_BTABLE_REG, 0);
+	SET_REG(USB_BTABLE_REG, USB_BTABLE_OFS);
 	SET_REG(USB_ISTR_REG, 0);
 
 	/* Enable RESET, SUSPEND, RESUME and CTR interrupts. */
