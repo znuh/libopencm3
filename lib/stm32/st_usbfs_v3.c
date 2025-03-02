@@ -92,8 +92,8 @@ void st_usbfs_assign_buffer(uint16_t ep_id, uint32_t dir_tx, uint16_t *ram_ofs, 
 	if(dir_tx)
 		txbuf_addr[ep_id] = ofs;
 	else {
-		*USB_CHEP_RXTXBD(ep_id) = (rx_blocks << 16) | ofs;
 		rxbuf_addr[ep_id] = ofs;
+		*USB_CHEP_RXTXBD(ep_id) = (rx_blocks << 16) | ofs;
 	}
 }
 
