@@ -26,6 +26,9 @@
 #include "../usb/usb_private.h"
 #include "common/st_usbfs_core.h"
 
+static uint16_t txbuf_addr[USB_MAX_ENDPOINTS];
+static uint16_t rxbuf_addr[USB_MAX_ENDPOINTS];
+
 static usbd_device *st_usbfs_v1_usbd_init(void);
 
 const struct _usbd_driver st_usbfs_v1_usb_driver = {
@@ -64,9 +67,11 @@ static usbd_device *st_usbfs_v1_usbd_init(void)
  * @param rx_blocks BLSIZE / NUM_BLOCK[4:0] (shifted) for rxcount register - 0 for TX
  */
 void st_usbfs_assign_buffer(uint16_t ep_id, uint32_t dir_tx, uint16_t *ram_ofs, uint16_t rx_blocks) {
-	if(dir_tx)
+	if(dir_tx) {
+		txbuf_addr[ep_id] = *ram_ofs << 1;
 		USB_SET_EP_TX_ADDR(ep_id, *ram_ofs);
-	else {
+	} else {
+		rxbuf_addr[ep_id] = *ram_ofs << 1;
 		USB_SET_EP_RX_ADDR(ep_id, *ram_ofs);
 		USB_SET_EP_RX_COUNT(ep_id, rx_blocks);
 	}
@@ -75,7 +80,7 @@ void st_usbfs_assign_buffer(uint16_t ep_id, uint32_t dir_tx, uint16_t *ram_ofs, 
 void st_usbfs_copy_to_pm(uint16_t ep_id, const void *buf, uint16_t len)
 {
 	const uint16_t *lbuf = buf;
-	volatile uint32_t *PM = (volatile void *)USB_GET_EP_TX_BUFF(ep_id);
+	volatile uint32_t *PM = (volatile void *)(USB_PMA_BASE + txbuf_addr[ep_id]);
 	uint32_t n_words = len >> 1;
 
 	/* copy complete words */
@@ -98,7 +103,7 @@ void st_usbfs_copy_to_pm(uint16_t ep_id, const void *buf, uint16_t len)
  */
 uint16_t st_usbfs_copy_from_pm(uint16_t ep_id, void *buf, uint16_t len)
 {
-	const volatile uint16_t *PM = (volatile void *)USB_GET_EP_RX_BUFF(ep_id);
+	const volatile uint16_t *PM = (volatile void *)(USB_PMA_BASE + rxbuf_addr[ep_id]);
 	uint16_t res = MIN(USB_GET_EP_RX_COUNT(ep_id) & 0x3ff, len);
 	uint16_t *lbuf = buf;
 	uint8_t odd = res & 1;
