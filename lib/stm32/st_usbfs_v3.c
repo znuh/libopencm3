@@ -38,6 +38,7 @@
 #define MAX_ENDPOINTS	8
 
 static uint16_t txbuf_addr[MAX_ENDPOINTS];
+static uint16_t rxbuf_addr[MAX_ENDPOINTS];
 
 /** Initialize the USB device controller hardware of the STM32. */
 static usbd_device *st_usbfs_v3_usbd_init(void)
@@ -92,8 +93,10 @@ void st_usbfs_assign_buffer(uint16_t ep_id, uint32_t dir_tx, uint16_t *ram_ofs, 
 	*ram_ofs = ofs;
 	if(dir_tx)
 		txbuf_addr[ep_id] = ofs;
-	else
+	else {
 		*USB_CHEP_RXTXBD(ep_id) = (rx_blocks << 16) | ofs;
+		rxbuf_addr[ep_id] = ofs;
+	}
 }
 
 /* NOTE: could check if src buf is 32-Bit aligned (!(buf&3)) and do a faster copy then */
@@ -147,7 +150,7 @@ uint16_t st_usbfs_copy_from_pm(uint16_t ep_id, void *buf, uint16_t len)
 {
 	uint32_t v, i, buf_desc = *USB_CHEP_RXTXBD(ep_id);
 	uint32_t count = (buf_desc >> CHEP_BD_COUNT_SHIFT) & CHEP_BD_COUNT_MASK;
-	volatile uint32_t *PM = (volatile uint32_t *) (USB_PMA_BASE + (buf_desc & CHEP_BD_ADDR_MASK));
+	volatile uint32_t *PM = (volatile uint32_t *) (USB_PMA_BASE + rxbuf_addr[ep_id]);
 	uint8_t *dst = buf;
 
 	count = MIN(count, len);
