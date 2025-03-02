@@ -46,39 +46,39 @@
 
 /* --- USB BTABLE manipulators --------------------------------------------- */
 
-#define USB_GET_EP_TX_ADDR(EP)		GET_REG16(USB_EP_TX_ADDR(EP))
-#define USB_GET_EP_TX_COUNT(EP)		GET_REG16(USB_EP_TX_COUNT(EP))
-#define USB_GET_EP_RX_ADDR(EP)		GET_REG16(USB_EP_RX_ADDR(EP))
-#define USB_GET_EP_RX_COUNT(EP)		GET_REG16(USB_EP_RX_COUNT(EP))
-#define USB_SET_EP_TX_ADDR(EP, ADDR)	SET_REG16(USB_EP_TX_ADDR(EP), ADDR)
-#define USB_SET_EP_TX_COUNT(EP, COUNT)	SET_REG16(USB_EP_TX_COUNT(EP), COUNT)
-#define USB_SET_EP_RX_ADDR(EP, ADDR)	SET_REG16(USB_EP_RX_ADDR(EP), ADDR)
-#define USB_SET_EP_RX_COUNT(EP, COUNT)	SET_REG16(USB_EP_RX_COUNT(EP), COUNT)
+#define USB_GET_EP_TX_ADDR(EP)			GET_REG32(USB_EP_TX_ADDR(EP))
+#define USB_GET_EP_TX_COUNT(EP)			GET_REG32(USB_EP_TX_COUNT(EP))
+#define USB_GET_EP_RX_ADDR(EP)			GET_REG32(USB_EP_RX_ADDR(EP))
+#define USB_GET_EP_RX_COUNT(EP)			GET_REG32(USB_EP_RX_COUNT(EP))
+#define USB_SET_EP_TX_ADDR(EP, ADDR)	SET_REG32(USB_EP_TX_ADDR(EP), ADDR)
+#define USB_SET_EP_TX_COUNT(EP, COUNT)	SET_REG32(USB_EP_TX_COUNT(EP), COUNT)
+#define USB_SET_EP_RX_ADDR(EP, ADDR)	SET_REG32(USB_EP_RX_ADDR(EP), ADDR)
+#define USB_SET_EP_RX_COUNT(EP, COUNT)	SET_REG32(USB_EP_RX_COUNT(EP), COUNT)
 
 /* --- USB BTABLE Registers ------------------------------------------------ */
 
 /* Dedicated packet buffer memory SRAM access scheme: 1 x 16 bits / word (see RM) */
 
 #define USB_EP_TX_ADDR(EP) \
-	((uint32_t *)(USB_PMA_BASE + (USB_BTABLE_OFS + (EP) * 8 + 0) * 2))
+	(USB_PMA_BASE + (USB_BTABLE_OFS + (EP) * 8 + 0) * 2)
 
 #define USB_EP_TX_COUNT(EP) \
-	((uint32_t *)(USB_PMA_BASE + (USB_BTABLE_OFS + (EP) * 8 + 2) * 2))
+	(USB_PMA_BASE + (USB_BTABLE_OFS + (EP) * 8 + 2) * 2)
 
 #define USB_EP_RX_ADDR(EP) \
-	((uint32_t *)(USB_PMA_BASE + (USB_BTABLE_OFS + (EP) * 8 + 4) * 2))
+	(USB_PMA_BASE + (USB_BTABLE_OFS + (EP) * 8 + 4) * 2)
 
 #define USB_EP_RX_COUNT(EP) \
-	((uint32_t *)(USB_PMA_BASE + (USB_BTABLE_OFS + (EP) * 8 + 6) * 2))
+	(USB_PMA_BASE + (USB_BTABLE_OFS + (EP) * 8 + 6) * 2)
 
 /* --- USB BTABLE manipulators --------------------------------------------- */
-
+/*
 #define USB_GET_EP_TX_BUFF(EP) \
 	(USB_PMA_BASE + (uint8_t *)(USB_GET_EP_TX_ADDR(EP) * 2))
 
 #define USB_GET_EP_RX_BUFF(EP) \
 	(USB_PMA_BASE + (uint8_t *)(USB_GET_EP_RX_ADDR(EP) * 2))
-
+*/
 #define	ST_USBFS_DRIVER			&st_usbfs_v1_usb_driver
 
 #endif
