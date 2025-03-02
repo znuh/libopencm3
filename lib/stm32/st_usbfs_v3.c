@@ -35,10 +35,8 @@
 #include "../usb/usb_private.h"
 #include "common/st_usbfs_core.h"
 
-#define MAX_ENDPOINTS	8
-
-static uint16_t txbuf_addr[MAX_ENDPOINTS];
-static uint16_t rxbuf_addr[MAX_ENDPOINTS];
+static uint16_t txbuf_addr[USB_MAX_ENDPOINTS];
+static uint16_t rxbuf_addr[USB_MAX_ENDPOINTS];
 
 /** Initialize the USB device controller hardware of the STM32. */
 static usbd_device *st_usbfs_v3_usbd_init(void)
@@ -67,7 +65,7 @@ static usbd_device *st_usbfs_v3_usbd_init(void)
 	/* datasheet states t_STARTUP: 1us
 	 * we use this waiting time to clean up the PAM buffer table */
 	do {
-		*BD++ = MAX_ENDPOINTS * sizeof(uint32_t) * 2; // set ADDR to USB RAM just after BTABLE
+		*BD++ = USB_MAX_ENDPOINTS * sizeof(uint32_t) * 2; // set ADDR to USB RAM just after BTABLE
 	} while(--n_descriptors);
 
 	SET_REG(USB_CNTR_REG, 0);

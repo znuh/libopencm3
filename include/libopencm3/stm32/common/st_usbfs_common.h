@@ -136,14 +136,15 @@ LGPL License Terms @ref lgpl_license
 
 /* --- USB endpoint register offsets --------------------------------------- */
 
-#define USB_EP0			0
-#define USB_EP1			1
-#define USB_EP2			2
-#define USB_EP3			3
-#define USB_EP4			4
-#define USB_EP5			5
-#define USB_EP6			6
-#define USB_EP7			7
+#define USB_EP0				0
+#define USB_EP1				1
+#define USB_EP2				2
+#define USB_EP3				3
+#define USB_EP4				4
+#define USB_EP5				5
+#define USB_EP6				6
+#define USB_EP7				7
+#define USB_MAX_ENDPOINTS	8
 
 /* --- USB endpoint register masks / bits ---------------------------------- */
 
