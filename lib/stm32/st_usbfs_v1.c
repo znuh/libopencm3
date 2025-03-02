@@ -29,21 +29,6 @@
 static uint16_t txbuf_addr[USB_MAX_ENDPOINTS];
 static uint16_t rxbuf_addr[USB_MAX_ENDPOINTS];
 
-static usbd_device *st_usbfs_v1_usbd_init(void);
-
-const struct _usbd_driver st_usbfs_v1_usb_driver = {
-	.init = st_usbfs_v1_usbd_init,
-	.set_address = st_usbfs_set_address,
-	.ep_setup = st_usbfs_ep_setup,
-	.ep_reset = st_usbfs_endpoints_reset,
-	.ep_stall_set = st_usbfs_ep_stall_set,
-	.ep_stall_get = st_usbfs_ep_stall_get,
-	.ep_nak_set = st_usbfs_ep_nak_set,
-	.ep_write_packet = st_usbfs_ep_write_packet,
-	.ep_read_packet = st_usbfs_ep_read_packet,
-	.poll = st_usbfs_poll,
-};
-
 /** Initialize the USB device controller hardware of the STM32. */
 static usbd_device *st_usbfs_v1_usbd_init(void)
 {
@@ -118,3 +103,16 @@ uint16_t st_usbfs_copy_from_pm(uint16_t ep_id, void *buf, uint16_t len)
 	}
 	return res;
 }
+
+const struct _usbd_driver st_usbfs_v1_usb_driver = {
+	.init = st_usbfs_v1_usbd_init,
+	.set_address = st_usbfs_set_address,
+	.ep_setup = st_usbfs_ep_setup,
+	.ep_reset = st_usbfs_endpoints_reset,
+	.ep_stall_set = st_usbfs_ep_stall_set,
+	.ep_stall_get = st_usbfs_ep_stall_get,
+	.ep_nak_set = st_usbfs_ep_nak_set,
+	.ep_write_packet = st_usbfs_ep_write_packet,
+	.ep_read_packet = st_usbfs_ep_read_packet,
+	.poll = st_usbfs_poll,
+};
