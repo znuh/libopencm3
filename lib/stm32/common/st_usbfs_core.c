@@ -20,6 +20,7 @@
  */
 
 #include <libopencm3/cm3/common.h>
+#include <libopencm3/cm3/assert.h>
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/tools.h>
 #include <libopencm3/stm32/st_usbfs.h>
@@ -104,6 +105,11 @@ void st_usbfs_ep_setup(usbd_device *dev, uint8_t addr, uint8_t type,
 	};
 	uint8_t dir = addr & 0x80;
 	addr &= 0x7f;
+
+	/* this implementation can only handle endpoint addresses < 8 for now.
+	 * see NOTE at the top. */
+	if(addr >= USB_MAX_ENDPOINTS)
+		cm3_assert_not_reached();
 
 	/* Assign address. */
 	USB_SET_EP_ADDR(addr, addr);
