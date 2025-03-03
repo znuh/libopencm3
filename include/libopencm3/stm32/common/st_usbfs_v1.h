@@ -38,15 +38,11 @@
 
 /* enable and include BTADDR register for USB v1 peripheral */
 #define ST_USBFS_HAVE_BTADDR
-#include <libopencm3/stm32/common/st_usbfs_ext.h>
-
-/*****************************************************************************/
-/* Register definitions                                                      */
-/*****************************************************************************/
 
 /* Dedicated packet buffer memory SRAM access scheme: 1 x 16 bits / word (see RM) */
-#define USB_BT32_GET(OFS)			GET_REG32(USB_PMA_BASE + ((OFS)<<1))
-#define USB_BT32_SET(OFS, VAL)		SET_REG32(USB_PMA_BASE + ((OFS)<<1), VAL)
+#define ST_USBFS_PMA_AS_1X16
+
+#include <libopencm3/stm32/common/st_usbfs_ext.h>
 
 #define	ST_USBFS_DRIVER				&st_usbfs_v1_usb_driver
 

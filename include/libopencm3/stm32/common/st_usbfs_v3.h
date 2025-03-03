@@ -32,33 +32,11 @@
 /* enable and include additional registers (LPM and BCD) for USB v3 peripheral */
 #define ST_USBFS_HAVE_LPM
 #define ST_USBFS_HAVE_BCD
-#include <libopencm3/stm32/common/st_usbfs_ext.h>
-
-/*****************************************************************************/
-/* Module definitions                                                        */
-/*****************************************************************************/
-
-/*****************************************************************************/
-/* Register definitions                                                      */
-/*****************************************************************************/
-
-/*****************************************************************************/
-/* Register values                                                           */
-/*****************************************************************************/
-
-/* --- Channel/endpoint buffer descriptors  -------------------------------- */
 
 /* Dedicated packet buffer memory SRAM access scheme: 32 bits (see RM) */
+#define ST_USBFS_PMA_AS_1X32
 
-#define USB_CHEP_TXRXBD(EP) \
-	((uint32_t *)(USB_PMA_BASE + ((EP) * 8 + 0) * 1))
-
-#define CHEP_BD_ADDR_MASK 				0xffff
-#define CHEP_BD_COUNT_SHIFT				16
-#define CHEP_BD_COUNT_MASK				0x3ff
-
-#define USB_CHEP_RXTXBD(EP) \
-	((uint32_t *)(USB_PMA_BASE + ((EP) * 8 + 4) * 1))
+#include <libopencm3/stm32/common/st_usbfs_ext.h>
 
 #define	ST_USBFS_DRIVER					&st_usbfs_v3_usb_driver
 

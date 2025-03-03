@@ -89,13 +89,39 @@
 
 #ifdef ST_USBFS_HAVE_BTADDR
 /* --- USB BTABLE registers ------------------------------------------------ */
-#define USB_GET_BTABLE		GET_REG16(USB_BTABLE_REG)
-#define USB_BTABLE_OFS		0	/* place BTABLE at start of packet RAM */
-#define BT_TX_ADDR(EP)		(USB_BTABLE_OFS + (EP) * 8 + 0)
-#define BT_TX_COUNT(EP)		(USB_BTABLE_OFS + (EP) * 8 + 2)
-#define BT_RX_ADDR(EP)		(USB_BTABLE_OFS + (EP) * 8 + 4)
-#define BT_RX_COUNT(EP)		(USB_BTABLE_OFS + (EP) * 8 + 6)
+#define USB_GET_BTABLE				GET_REG16(USB_BTABLE_REG)
 #endif
+
+/* --- BTABLE offsets ------------------------------------------------ */
+#define USB_BTABLE_OFS				0	/* BTABLE resides at start of packet RAM */
+
+#define BT_TX_ADDR(EP)				(USB_BTABLE_OFS + (EP) * 8 + 0)
+#define BT_TX_COUNT(EP)				(USB_BTABLE_OFS + (EP) * 8 + 2)
+#define BT_RX_ADDR(EP)				(USB_BTABLE_OFS + (EP) * 8 + 4)
+#define BT_RX_COUNT(EP)				(USB_BTABLE_OFS + (EP) * 8 + 6)
+
+#ifdef ST_USBFS_PMA_AS_1X16
+/* Dedicated packet buffer memory SRAM access scheme: 1 x 16 bits / word (see RM) */
+#define USB_BT32_GET(OFS)			GET_REG32(USB_PMA_BASE + ((OFS)<<1))
+#define USB_BT32_SET(OFS, VAL)		SET_REG32(USB_PMA_BASE + ((OFS)<<1), VAL)
+#endif /* ST_USBFS_PMA_AS_1X16 */
+
+#ifdef ST_USBFS_PMA_AS_2X16
+/* Dedicated packet buffer memory SRAM access scheme: 2 x 16 bits / word (see RM) */
+#define USB_BT16_GET(OFS)			GET_REG16(USB_PMA_BASE + (OFS))
+#define USB_BT16_SET(OFS, VAL)		SET_REG16(USB_PMA_BASE + (OFS), VAL)
+#endif /* ST_USBFS_PMA_AS_2X16 */
+
+#ifdef ST_USBFS_PMA_AS_1X32
+/* Dedicated packet buffer memory SRAM access scheme: 32 bits (see RM)
+ * This new peripheral version usually(?) does not have a BTADDR register anymore.
+ * The BT address is fixed zero. */
+#define USB_CHEP_TXRXBD(EP) 		((uint32_t *)(USB_PMA_BASE + ((EP) * 8 + 0) * 1))
+#define USB_CHEP_RXTXBD(EP) 		((uint32_t *)(USB_PMA_BASE + ((EP) * 8 + 4) * 1))
+#define CHEP_BD_ADDR_MASK 			0xffff
+#define CHEP_BD_COUNT_SHIFT			16
+#define CHEP_BD_COUNT_MASK			0x3ff
+#endif /* ST_USBFS_PMA_AS_1X32 */
 
 #endif
 /** @cond */

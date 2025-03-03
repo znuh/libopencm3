@@ -33,23 +33,17 @@
 
 #include <libopencm3/stm32/common/st_usbfs_common.h>
 
-/* enable and include additional registers (LPM and BCD) for USB v2 peripheral */
+/* enable and include BTADDR register (inherited from v1 peripheral) */
 #define ST_USBFS_HAVE_BTADDR
+
+/* enable and include additional registers (LPM and BCD) for USB v2 peripheral */
 #define ST_USBFS_HAVE_LPM
 #define ST_USBFS_HAVE_BCD
-#include <libopencm3/stm32/common/st_usbfs_ext.h>
-
-/*****************************************************************************/
-/* Module definitions                                                        */
-/*****************************************************************************/
-
-/*****************************************************************************/
-/* Register definitions                                                      */
-/*****************************************************************************/
 
 /* Dedicated packet buffer memory SRAM access scheme: 2 x 16 bits / word (see RM) */
-#define USB_BT16_GET(OFS)			GET_REG16(USB_PMA_BASE + (OFS))
-#define USB_BT16_SET(OFS, VAL)		SET_REG16(USB_PMA_BASE + (OFS), VAL)
+#define ST_USBFS_PMA_AS_2X16
+
+#include <libopencm3/stm32/common/st_usbfs_ext.h>
 
 #define	ST_USBFS_DRIVER				&st_usbfs_v2_usb_driver
 
