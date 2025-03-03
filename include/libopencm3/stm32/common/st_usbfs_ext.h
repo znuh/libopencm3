@@ -91,6 +91,10 @@
 /* --- USB BTABLE registers ------------------------------------------------ */
 #define USB_GET_BTABLE		GET_REG16(USB_BTABLE_REG)
 #define USB_BTABLE_OFS		0	/* place BTABLE at start of packet RAM */
+#define BT_TX_ADDR(EP)		(USB_BTABLE_OFS + (EP) * 8 + 0)
+#define BT_TX_COUNT(EP)		(USB_BTABLE_OFS + (EP) * 8 + 2)
+#define BT_RX_ADDR(EP)		(USB_BTABLE_OFS + (EP) * 8 + 4)
+#define BT_RX_COUNT(EP)		(USB_BTABLE_OFS + (EP) * 8 + 6)
 #endif
 
 #endif

@@ -45,16 +45,8 @@
 /*****************************************************************************/
 
 /* Dedicated packet buffer memory SRAM access scheme: 1 x 16 bits / word (see RM) */
-
 #define USB_BT32_GET(OFS)			GET_REG32(USB_PMA_BASE + ((OFS)<<1))
 #define USB_BT32_SET(OFS, VAL)		SET_REG32(USB_PMA_BASE + ((OFS)<<1), VAL)
-
-/* --- USB BTABLE Registers ------------------------------------------------ */
-
-#define BT_TX_ADDR(EP)				(USB_BTABLE_OFS + (EP) * 8 + 0)
-#define BT_TX_COUNT(EP)				(USB_BTABLE_OFS + (EP) * 8 + 2)
-#define BT_RX_ADDR(EP)				(USB_BTABLE_OFS + (EP) * 8 + 4)
-#define BT_RX_COUNT(EP)				(USB_BTABLE_OFS + (EP) * 8 + 6)
 
 #define	ST_USBFS_DRIVER				&st_usbfs_v1_usb_driver
 
