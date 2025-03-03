@@ -25,13 +25,13 @@
  */
 
 /* Get register content. */
-#define GET_REG32(REG)		(*((uint32_t *)REG))
-#define GET_REG16(REG)		(*((uint16_t *)REG))
+#define GET_REG32(REG)		(*((uint32_t *)(REG)))
+#define GET_REG16(REG)		(*((uint16_t *)(REG)))
 #define GET_REG(REG)		(*(REG))
 
 /* Set register content. */
-#define SET_REG32(REG, VAL)	(*((uint32_t *)REG) = (VAL))
-#define SET_REG16(REG, VAL)	(*((uint16_t *)REG) = (VAL))
+#define SET_REG32(REG, VAL)	(*((uint32_t *)(REG)) = (VAL))
+#define SET_REG16(REG, VAL)	(*((uint16_t *)(REG)) = (VAL))
 #define SET_REG(REG, VAL)	(*(REG) = (VAL))
 
 /* Clear register bit. */

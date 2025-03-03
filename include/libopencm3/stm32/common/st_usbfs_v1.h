@@ -44,42 +44,19 @@
 /* Register definitions                                                      */
 /*****************************************************************************/
 
-/* --- USB BTABLE manipulators --------------------------------------------- */
+/* Dedicated packet buffer memory SRAM access scheme: 1 x 16 bits / word (see RM) */
 
-#define USB_GET_EP_TX_ADDR(EP)			GET_REG32(USB_EP_TX_ADDR(EP))
-#define USB_GET_EP_TX_COUNT(EP)			GET_REG32(USB_EP_TX_COUNT(EP))
-#define USB_GET_EP_RX_ADDR(EP)			GET_REG32(USB_EP_RX_ADDR(EP))
-#define USB_GET_EP_RX_COUNT(EP)			GET_REG32(USB_EP_RX_COUNT(EP))
-#define USB_SET_EP_TX_ADDR(EP, ADDR)	SET_REG32(USB_EP_TX_ADDR(EP), ADDR)
-#define USB_SET_EP_TX_COUNT(EP, COUNT)	SET_REG32(USB_EP_TX_COUNT(EP), COUNT)
-#define USB_SET_EP_RX_ADDR(EP, ADDR)	SET_REG32(USB_EP_RX_ADDR(EP), ADDR)
-#define USB_SET_EP_RX_COUNT(EP, COUNT)	SET_REG32(USB_EP_RX_COUNT(EP), COUNT)
+#define USB_BT32_GET(OFS)			GET_REG32(USB_PMA_BASE + ((OFS)<<1))
+#define USB_BT32_SET(OFS, VAL)		SET_REG32(USB_PMA_BASE + ((OFS)<<1), VAL)
 
 /* --- USB BTABLE Registers ------------------------------------------------ */
 
-/* Dedicated packet buffer memory SRAM access scheme: 1 x 16 bits / word (see RM) */
+#define BT_TX_ADDR(EP)				(USB_BTABLE_OFS + (EP) * 8 + 0)
+#define BT_TX_COUNT(EP)				(USB_BTABLE_OFS + (EP) * 8 + 2)
+#define BT_RX_ADDR(EP)				(USB_BTABLE_OFS + (EP) * 8 + 4)
+#define BT_RX_COUNT(EP)				(USB_BTABLE_OFS + (EP) * 8 + 6)
 
-#define USB_EP_TX_ADDR(EP) \
-	(USB_PMA_BASE + (USB_BTABLE_OFS + (EP) * 8 + 0) * 2)
-
-#define USB_EP_TX_COUNT(EP) \
-	(USB_PMA_BASE + (USB_BTABLE_OFS + (EP) * 8 + 2) * 2)
-
-#define USB_EP_RX_ADDR(EP) \
-	(USB_PMA_BASE + (USB_BTABLE_OFS + (EP) * 8 + 4) * 2)
-
-#define USB_EP_RX_COUNT(EP) \
-	(USB_PMA_BASE + (USB_BTABLE_OFS + (EP) * 8 + 6) * 2)
-
-/* --- USB BTABLE manipulators --------------------------------------------- */
-/*
-#define USB_GET_EP_TX_BUFF(EP) \
-	(USB_PMA_BASE + (uint8_t *)(USB_GET_EP_TX_ADDR(EP) * 2))
-
-#define USB_GET_EP_RX_BUFF(EP) \
-	(USB_PMA_BASE + (uint8_t *)(USB_GET_EP_RX_ADDR(EP) * 2))
-*/
-#define	ST_USBFS_DRIVER			&st_usbfs_v1_usb_driver
+#define	ST_USBFS_DRIVER				&st_usbfs_v1_usb_driver
 
 #endif
 /** @cond */
