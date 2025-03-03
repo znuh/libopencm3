@@ -271,6 +271,10 @@ LGPL License Terms @ref lgpl_license
 
 /**@}*/
 
+/* --- Additional definitions ---------------------------------- */
+#define USB_BUF_RX		0
+#define USB_BUF_TX		1
+
 #endif
 /** @cond */
 #else

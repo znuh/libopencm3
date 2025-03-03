@@ -29,8 +29,7 @@
 
 static struct _usbd_device st_usbfs_dev;
 
-static uint16_t txbuf_addr[USB_MAX_ENDPOINTS];
-static uint16_t rxbuf_addr[USB_MAX_ENDPOINTS];
+static uint16_t epbuf_addr[USB_MAX_ENDPOINTS][2];
 
 /** Initialize the USB device controller hardware of the STM32. */
 static usbd_device *st_usbfs_v2_usbd_init(void)
@@ -56,11 +55,10 @@ static usbd_device *st_usbfs_v2_usbd_init(void)
  * @param rx_blocks BLSIZE / NUM_BLOCK[4:0] (shifted) for rxcount register - 0 for TX
  */
 void st_usbfs_assign_buffer(uint16_t ep_id, uint32_t dir_tx, uint16_t *ram_ofs, uint16_t rx_blocks) {
-	if(dir_tx) {
-		txbuf_addr[ep_id] = *ram_ofs;
+	epbuf_addr[ep_id][dir_tx] = *ram_ofs;
+	if(dir_tx)
 		USB_BT16_SET(BT_TX_ADDR(ep_id), *ram_ofs);
-	} else {
-		rxbuf_addr[ep_id] = *ram_ofs;
+	else {
 		USB_BT16_SET(BT_RX_ADDR(ep_id), *ram_ofs);
 		USB_BT16_SET(BT_RX_COUNT(ep_id), rx_blocks);
 	}
@@ -73,7 +71,7 @@ void st_usbfs_copy_to_pm(uint16_t ep_id, const void *buf, uint16_t len)
 	 * that don't support unaligned accesses.
 	 */
 	const uint8_t *lbuf = buf;
-	volatile uint16_t *PM = (volatile void *)(USB_PMA_BASE + txbuf_addr[ep_id]);
+	volatile uint16_t *PM = (volatile void *)(USB_PMA_BASE + epbuf_addr[ep_id][USB_BUF_TX]);
 	uint32_t n_words = len >> 1;
 
 	/* copy complete words */
@@ -97,7 +95,7 @@ void st_usbfs_copy_to_pm(uint16_t ep_id, const void *buf, uint16_t len)
  */
 uint16_t st_usbfs_copy_from_pm(uint16_t ep_id, void *buf, uint16_t len)
 {
-	const volatile uint16_t *PM = (volatile void *)(USB_PMA_BASE + rxbuf_addr[ep_id]);
+	const volatile uint16_t *PM = (volatile void *)(USB_PMA_BASE + epbuf_addr[ep_id][USB_BUF_RX]);
 	uint16_t res = MIN(USB_BT16_GET(BT_RX_COUNT(ep_id)) & 0x3ff, len);
 	uint8_t odd = res & 1;
 	len = res >> 1;
