@@ -27,8 +27,6 @@
 #ifndef LIBOPENCM3_ST_USBFS_V3_H
 #define LIBOPENCM3_ST_USBFS_V3_H
 
-#include <libopencm3/stm32/common/st_usbfs_common.h>
-
 /* enable and include additional registers (LPM and BCD) for USB v3 peripheral */
 #define ST_USBFS_HAVE_LPM
 #define ST_USBFS_HAVE_BCD

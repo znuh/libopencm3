@@ -34,8 +34,6 @@
 #ifndef LIBOPENCM3_ST_USBFS_V1_H
 #define LIBOPENCM3_ST_USBFS_V1_H
 
-#include <libopencm3/stm32/common/st_usbfs_common.h>
-
 /* enable and include BTADDR register for USB v1 peripheral */
 #define ST_USBFS_HAVE_BTADDR
 
