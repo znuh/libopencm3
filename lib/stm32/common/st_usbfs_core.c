@@ -3,6 +3,7 @@
  *
  * Copyright (C) 2010 Gareth McMullin <gareth@blacksphere.co.nz>
  * Copyright (C) 2015 Robin Kreis <r.kreis@uni-bremen.de>
+ * Copyright (C) 2025 Benedikt Heinz <zn000h@gmail.com>
  *
  * This library is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -35,6 +36,15 @@
  * The _usbd_driver should have a *private pointer for such stuff, but it doesn't. */
 static uint8_t st_usbfs_force_nak[USB_MAX_ENDPOINTS];
 static uint16_t tx_bufsize[USB_MAX_ENDPOINTS];
+
+/* NOTE:
+ * The ST USBFS core has support for up to 8 endpoints (USB_MAX_ENDPOINTS).
+ * These endpoints are identified by their ID [0..7].
+ * This core uses the USB endpoint address (which can go up to 127) directly
+ * as the ST endpoint ID.
+ * Therefore, endpoint addresses >7 cannot be used!
+ * Changing this would require endpoint address <-> ID mapping, but the core
+ * does not do this (yet). */
 
 void st_usbfs_set_address(usbd_device *dev, uint8_t addr)
 {
