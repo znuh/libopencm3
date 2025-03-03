@@ -34,6 +34,7 @@
  * Is there such a device (yet)?
  * The _usbd_driver should have a *private pointer for such stuff, but it doesn't. */
 static uint8_t st_usbfs_force_nak[USB_MAX_ENDPOINTS];
+static uint16_t tx_bufsize[USB_MAX_ENDPOINTS];
 
 void st_usbfs_set_address(usbd_device *dev, uint8_t addr)
 {
@@ -107,6 +108,7 @@ void st_usbfs_ep_setup(usbd_device *dev, uint8_t addr, uint8_t type,
 		USB_CLR_EP_TX_DTOG(addr);
 		USB_SET_EP_TX_STAT(addr, USB_EP_TX_STAT_NAK);
 		dev->pm_top += max_size;
+		tx_bufsize[addr] = max_size;
 	}
 
 	if (!dir) {
@@ -207,6 +209,9 @@ uint16_t st_usbfs_ep_write_packet(usbd_device *dev, uint8_t addr,
 	if ((*USB_EP_REG(addr) & USB_EP_TX_STAT) == USB_EP_TX_STAT_VALID) {
 		return 0;
 	}
+
+	/* Prevent EP TX buffer overflows by clamping the length to the allocated buffer size. */
+	len = MIN(len, tx_bufsize[addr]);
 
 	st_usbfs_copy_to_pm(addr, buf, len);
 	USB_SET_EP_TX_STAT(addr, USB_EP_TX_STAT_VALID);
