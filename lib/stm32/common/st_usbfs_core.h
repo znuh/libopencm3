@@ -79,7 +79,4 @@ uint16_t st_usbfs_copy_from_pm(uint16_t ep_id, void *buf, uint16_t len);
  */
 void st_usbfs_copy_to_pm(uint16_t ep_id, const void *buf, uint16_t len);
 
-extern uint8_t st_usbfs_force_nak[8];
-extern struct _usbd_device st_usbfs_dev;
-
 #endif

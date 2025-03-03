@@ -26,9 +26,14 @@
 #include "../../usb/usb_private.h"
 #include "st_usbfs_core.h"
 
-/* TODO - can't these be inside the impls, not globals from the core? */
-uint8_t st_usbfs_force_nak[8];
-struct _usbd_device st_usbfs_dev;
+/* TODO - can't these be inside the impls, not globals from the core?
+ *
+ * Having this here works as long as there are not multiple peripherals
+ * using the core at a time on a MCU.
+ * A device with two independent ST_USBFS peripherals would break this.
+ * Is there such a device (yet)?
+ * The _usbd_driver should have a *private pointer for such stuff, but it doesn't. */
+static uint8_t st_usbfs_force_nak[USB_MAX_ENDPOINTS];
 
 void st_usbfs_set_address(usbd_device *dev, uint8_t addr)
 {

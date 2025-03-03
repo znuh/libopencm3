@@ -26,6 +26,8 @@
 #include "../usb/usb_private.h"
 #include "common/st_usbfs_core.h"
 
+static struct _usbd_device st_usbfs_dev;
+
 static uint16_t txbuf_addr[USB_MAX_ENDPOINTS];
 static uint16_t rxbuf_addr[USB_MAX_ENDPOINTS];
 
