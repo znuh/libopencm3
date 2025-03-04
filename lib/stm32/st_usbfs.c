@@ -221,12 +221,12 @@ static inline uint16_t copy_from_pm_1x16(uint16_t ep_id, uint16_t rxbuf_ofs, voi
 void st_usbfs_assign_buffer(uint16_t ep_id, uint32_t dir_tx, uint16_t *ram_ofs, uint16_t rx_blocks)
 {
 	uint16_t ofs;
-#if defined(ST_USBFS_PMA_AS_1X32)
-	ofs = assign_buffer_1x32(ep_id, dir_tx, ram_ofs, rx_blocks);
+#if defined(ST_USBFS_PMA_AS_1X16)
+	ofs = assign_buffer_1x16(ep_id, dir_tx, ram_ofs, rx_blocks);
 #elif defined(ST_USBFS_PMA_AS_2X16)
 	ofs = assign_buffer_2x16(ep_id, dir_tx, ram_ofs, rx_blocks);
-#elif defined(ST_USBFS_PMA_AS_1X16)
-	ofs = assign_buffer_1x16(ep_id, dir_tx, ram_ofs, rx_blocks);
+#elif defined(ST_USBFS_PMA_AS_1X32)
+	ofs = assign_buffer_1x32(ep_id, dir_tx, ram_ofs, rx_blocks);
 #else
 #error "unknown PMA access scheme"
 #endif
@@ -237,12 +237,12 @@ void st_usbfs_copy_to_pm(uint16_t ep_id, const void *src, uint16_t len)
 {
 	uint16_t txbuf_ofs = epbuf_addr[ep_id][USB_BUF_TX];
 
-#if defined(ST_USBFS_PMA_AS_1X32)
-	copy_to_pm_1x32(ep_id, txbuf_ofs, src, len);
+#if defined(ST_USBFS_PMA_AS_1X16)
+	copy_to_pm_1x16(ep_id, txbuf_ofs, src, len);
 #elif defined(ST_USBFS_PMA_AS_2X16)
 	copy_to_pm_2x16(ep_id, txbuf_ofs, src, len);
-#elif defined(ST_USBFS_PMA_AS_1X16)
-	copy_to_pm_1x16(ep_id, txbuf_ofs, src, len);
+#elif defined(ST_USBFS_PMA_AS_1X32)
+	copy_to_pm_1x32(ep_id, txbuf_ofs, src, len);
 #else
 #error "unknown PMA access scheme"
 #endif
@@ -259,12 +259,12 @@ uint16_t st_usbfs_copy_from_pm(uint16_t ep_id, void *dst, uint16_t len)
 {
 	uint16_t rxbuf_ofs = epbuf_addr[ep_id][USB_BUF_RX];
 
-#if defined(ST_USBFS_PMA_AS_1X32)
-	return copy_from_pm_1x32(ep_id, rxbuf_ofs, dst, len);
+#if defined(ST_USBFS_PMA_AS_1X16)
+	return copy_from_pm_1x16(ep_id, rxbuf_ofs, dst, len);
 #elif defined(ST_USBFS_PMA_AS_2X16)
 	return copy_from_pm_2x16(ep_id, rxbuf_ofs, dst, len);
-#elif defined(ST_USBFS_PMA_AS_1X16)
-	return copy_from_pm_1x16(ep_id, rxbuf_ofs, dst, len);
+#elif defined(ST_USBFS_PMA_AS_1X32)
+	return copy_from_pm_1x32(ep_id, rxbuf_ofs, dst, len);
 #else
 #error "unknown PMA access scheme"
 #endif
