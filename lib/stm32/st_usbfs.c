@@ -47,15 +47,15 @@ static inline void assign_buffer_1x32(uint16_t ep_id, uint32_t dir_tx, uint16_t 
 }
 
 /* NOTE: could check if src buf is 32-Bit aligned (!(buf&3)) and do a faster copy then */
-static inline void copy_to_pm_1x32(uint16_t ep_id, uint16_t buf_ofs, const void *buf, uint16_t len)
+static inline void copy_to_pm_1x32(uint16_t ep_id, uint16_t txbuf_ofs, const void *vsrc, uint16_t len)
 {
-	volatile uint32_t *PM = (volatile uint32_t *) (USB_PMA_BASE + buf_ofs);
-	const uint8_t *lbuf = buf;
+	volatile uint32_t *PM = (volatile uint32_t *) (USB_PMA_BASE + txbuf_ofs);
+	const uint8_t *src = vsrc;
 	uint32_t i,v;
 
-	for (v=i=0; i<len; i++, lbuf++) {
+	for (v=i=0; i<len; i++, src++) {
 		v<<=8;
-		v|=*lbuf;
+		v|=*src;
 		if((i&3) == 3)
 			*PM++ = __builtin_bswap32(v);
 	}
@@ -67,7 +67,7 @@ static inline void copy_to_pm_1x32(uint16_t ep_id, uint16_t buf_ofs, const void 
 		*PM = __builtin_bswap32(v<<i);
 	}
 
-	*USB_CHEP_TXRXBD(ep_id) = (len << CHEP_BD_COUNT_SHIFT) | buf_ofs;
+	*USB_CHEP_TXRXBD(ep_id) = (len << CHEP_BD_COUNT_SHIFT) | txbuf_ofs;
 }
 
 /* ERRATUM for STM32C071x8/xB (ES0618 - Rev 1):
@@ -85,12 +85,11 @@ static inline void copy_to_pm_1x32(uint16_t ep_id, uint16_t buf_ofs, const void 
  * Will fail for Low Speed mode, but LS mode is too exotic to justify a synthetic delay here.
  */
 /* NOTE: could check if dst buf is 32-Bit aligned (!(buf&3)) and do a faster copy then */
-static inline uint16_t copy_from_pm_1x32(uint16_t ep_id, void *buf, uint16_t len)
+static inline uint16_t copy_from_pm_1x32(uint16_t ep_id, uint16_t rxbuf_ofs, void *vdst, uint16_t len)
 {
-	uint32_t v, i, buf_desc = *USB_CHEP_RXTXBD(ep_id);
-	uint32_t count = (buf_desc >> CHEP_BD_COUNT_SHIFT) & CHEP_BD_COUNT_MASK;
-	volatile uint32_t *PM = (volatile uint32_t *) (USB_PMA_BASE + epbuf_addr[ep_id][USB_BUF_RX]);
-	uint8_t *dst = buf;
+	uint32_t v, i, count = (*USB_CHEP_RXTXBD(ep_id) >> CHEP_BD_COUNT_SHIFT) & CHEP_BD_COUNT_MASK;
+	volatile uint32_t *PM = (volatile uint32_t *) (USB_PMA_BASE + rxbuf_ofs);
+	uint8_t *dst = vdst;
 
 	count = MIN(count, len);
 	for(v=i=0; i<count; i++, dst++, v>>=8) {
@@ -102,6 +101,65 @@ static inline uint16_t copy_from_pm_1x32(uint16_t ep_id, void *buf, uint16_t len
 }
 
 #endif /* ST_USBFS_PMA_AS_1X32 */
+
+/* --- Dedicated packet buffer memory SRAM access scheme: 2 x 16 bits / word ------------- */
+#ifdef ST_USBFS_PMA_AS_2X16
+
+static inline void assign_buffer_2x16(uint16_t ep_id, uint32_t dir_tx, uint16_t *ram_ofs, uint16_t rx_blocks) {
+	if(dir_tx)
+		USB_BT16_SET(BT_TX_ADDR(ep_id), *ram_ofs);
+	else {
+		USB_BT16_SET(BT_RX_ADDR(ep_id), *ram_ofs);
+		USB_BT16_SET(BT_RX_COUNT(ep_id), rx_blocks);
+	}
+}
+
+static inline void copy_to_pm_2x16(uint16_t ep_id, uint16_t txbuf_ofs, const void *vsrc, uint16_t len)
+{
+	volatile uint16_t *PM = (volatile void *)(USB_PMA_BASE + txbuf_ofs);
+	const uint8_t *src = vsrc;
+	uint32_t n_words = len >> 1;
+
+	/* This is a bytewise copy, so it always works, even on CM0(+)
+	 * that don't support unaligned accesses. */
+
+	/* copy complete words */
+	for(;n_words;n_words--,src+=2)
+		*PM++ = (uint16_t)src[1] << 8 | *src;
+
+	/* copy remaining byte if odd length */
+	if(len&1)
+		*PM = *src;
+
+	USB_BT16_SET(BT_TX_COUNT(ep_id), len);
+}
+
+static inline uint16_t copy_from_pm_2x16(uint16_t ep_id, uint16_t rxbuf_ofs, void *dst, uint16_t len)
+{
+	const volatile uint16_t *PM = (volatile void *)(USB_PMA_BASE + rxbuf_ofs;
+	uint16_t res = MIN(USB_BT16_GET(BT_RX_COUNT(ep_id)) & 0x3ff, len);
+	uint8_t odd = res & 1;
+	len = res >> 1;
+
+	if (((uintptr_t) dst) & 0x01) {
+		for (; len; PM++, len--) {
+			uint16_t value = *PM;
+			*(uint8_t *) dst++ = value;
+			*(uint8_t *) dst++ = value >> 8;
+		}
+	} else {
+		for (; len; PM++, dst += 2, len--) {
+			*(uint16_t *) dst = *PM;
+		}
+	}
+
+	if (odd) {
+		*(uint8_t *) dst = *(uint8_t *) PM;
+	}
+	return res;
+}
+
+#endif /* ST_USBFS_PMA_AS_2X16 */
 
 /* --- Common (dispatch) functions for all peripheral variants ---------------------- */
 
@@ -121,18 +179,29 @@ void st_usbfs_assign_buffer(uint16_t ep_id, uint32_t dir_tx, uint16_t *ram_ofs, 
 	 * previous buffer is also rounded up to 32 bits, but better safe than sorry... */
 	 ofs = (ofs + 3) & ~3;
 	 *ram_ofs = ofs;
-	assign_buffer_1x32(ep_id, dir_tx, ofs, rx_blocks);
 #endif
 
 	epbuf_addr[ep_id][dir_tx] = ofs;
+
+#if defined(ST_USBFS_PMA_AS_1X32)
+	assign_buffer_1x32(ep_id, dir_tx, ofs, rx_blocks);
+#elif defined(ST_USBFS_PMA_AS_2X16)
+	assign_buffer_2x16(ep_id, dir_tx, ofs, rx_blocks);
+#else
+#error "unknown PMA access scheme"
+#endif
 }
 
-void st_usbfs_copy_to_pm(uint16_t ep_id, const void *buf, uint16_t len)
+void st_usbfs_copy_to_pm(uint16_t ep_id, const void *src, uint16_t len)
 {
-	uint16_t buf_ofs = epbuf_addr[ep_id][USB_BUF_TX];
+	uint16_t txbuf_ofs = epbuf_addr[ep_id][USB_BUF_TX];
 
-#ifdef ST_USBFS_PMA_AS_1X32
-	copy_to_pm_1x32(ep_id, buf_ofs, buf, len);
+#if defined(ST_USBFS_PMA_AS_1X32)
+	copy_to_pm_1x32(ep_id, txbuf_ofs, src, len);
+#elif defined(ST_USBFS_PMA_AS_2X16)
+	copy_to_pm_2x16(ep_id, txbuf_ofs, src, len);
+#else
+#error "unknown PMA access scheme"
 #endif
 }
 
@@ -143,10 +212,16 @@ void st_usbfs_copy_to_pm(uint16_t ep_id, const void *buf, uint16_t len)
  * @param buf Destination pointer for data buffer.
  * @param len Number of bytes to copy.
  */
-uint16_t st_usbfs_copy_from_pm(uint16_t ep_id, void *buf, uint16_t len)
+uint16_t st_usbfs_copy_from_pm(uint16_t ep_id, void *dst, uint16_t len)
 {
-#ifdef ST_USBFS_PMA_AS_1X32
-	return copy_from_pm_1x32(ep_id, buf, len);
+	uint16_t rxbuf_ofs = epbuf_addr[ep_id][USB_BUF_RX];
+
+#if defined(ST_USBFS_PMA_AS_1X32)
+	return copy_from_pm_1x32(ep_id, rxbuf_ofs, dst, len);
+#elif defined(ST_USBFS_PMA_AS_2X16)
+	return copy_from_pm_2x16(ep_id, rxbuf_ofs, dst, len);
+#else
+#error "unknown PMA access scheme"
 #endif
 }
 
@@ -162,9 +237,6 @@ static void st_usbfs_disconnect(usbd_device *usbd_dev, bool disconnected)
 /** Initialize the USB device controller hardware of the STM32. */
 static usbd_device *st_usbfs_usbd_init(void)
 {
-	volatile uint32_t *BD = (volatile uint32_t *) USB_PMA_BASE; // buffer descriptors table
-	uint32_t n_descriptors = 2 * 8; // CHEP_TXRXBD + CHEP_RXTXBD for each of the 8 CHEPs
-
 #if defined(STM32C0)
 	/* make things easier for user by handling sane defaults */
 	if(rcc_get_usbclk_source() == RCC_HSIUSB48) {
@@ -176,18 +248,16 @@ static usbd_device *st_usbfs_usbd_init(void)
 
 	rcc_periph_clock_enable(RCC_USB);
 
-	/* we need to keep reset enabled for t_STARTUP after 
-	 * clearing powerdown or the transceiver won't work yet
-	 * 
-	 * experiments showed that not doing this will cause the
-	 * USB interface to enter error mode (USB_ISTR_ERR set) */
+	/* Reset might be cleared and endpoints might be active, if a
+	 * bootloader used USB before. Therefore, enforce a reset here */
 	SET_REG(USB_CNTR_REG, USB_CNTR_FRES);
 
-	/* datasheet states t_STARTUP: 1us
-	 * we use this waiting time to clean up the PAM buffer table */
-	do {
-		*BD++ = USB_MAX_ENDPOINTS * sizeof(uint32_t) * 2; // set ADDR to USB RAM just after BTABLE
-	} while(--n_descriptors);
+	/* We need to keep reset enabled for t_STARTUP after
+	 * clearing powerdown or the transceiver won't work yet.
+	 * Experiments showed that not doing this will cause the
+	 * USB interface to enter error mode (USB_ISTR_ERR set)
+	 * datasheet states t_STARTUP: 1us */
+	for(uint32_t i=128;i;i--) __asm__("nop");
 
 	SET_REG(USB_CNTR_REG, 0);
 
