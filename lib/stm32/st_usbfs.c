@@ -252,8 +252,8 @@ static usbd_device *st_usbfs_usbd_init(void)
 	/* We need to keep reset enabled for t_STARTUP after
 	 * clearing powerdown or the transceiver won't work yet.
 	 * Experiments showed that not doing this will cause the
-	 * USB interface to enter error mode (USB_ISTR_ERR set)
-	 * datasheet states t_STARTUP: 1us */
+	 * USB interface to enter error mode (USB_ISTR_ERR set).
+	 * Datasheet states t_STARTUP: 1us */
 	for(uint32_t i=128;i;i--) __asm__("nop");
 
 	SET_REG(USB_CNTR_REG, 0);
