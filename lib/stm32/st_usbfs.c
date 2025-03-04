@@ -105,13 +105,10 @@ static inline uint16_t copy_from_pm_1x32(uint16_t ep_id, uint16_t rxbuf_ofs, voi
 /* --- Dedicated packet buffer memory SRAM access scheme: 2 x 16 bits / word ------------- */
 #ifdef ST_USBFS_PMA_AS_2X16
 
-static inline void assign_buffer_2x16(uint16_t ep_id, uint32_t dir_tx, uint16_t *ram_ofs, uint16_t rx_blocks) {
-	if(dir_tx)
-		USB_BT16_SET(BT_TX_ADDR(ep_id), *ram_ofs);
-	else {
-		USB_BT16_SET(BT_RX_ADDR(ep_id), *ram_ofs);
+static inline void assign_buffer_2x16(uint16_t ep_id, uint32_t dir_tx, uint16_t ofs, uint16_t rx_blocks) {
+	USB_BT16_SET(dir_tx ? BT_TX_ADDR(ep_id) : BT_RX_ADDR(ep_id), ofs);
+	if(!dir_tx)
 		USB_BT16_SET(BT_RX_COUNT(ep_id), rx_blocks);
-	}
 }
 
 static inline void copy_to_pm_2x16(uint16_t ep_id, uint16_t txbuf_ofs, const void *vsrc, uint16_t len)
@@ -136,7 +133,7 @@ static inline void copy_to_pm_2x16(uint16_t ep_id, uint16_t txbuf_ofs, const voi
 
 static inline uint16_t copy_from_pm_2x16(uint16_t ep_id, uint16_t rxbuf_ofs, void *dst, uint16_t len)
 {
-	const volatile uint16_t *PM = (volatile void *)(USB_PMA_BASE + rxbuf_ofs;
+	const volatile uint16_t *PM = (volatile void *)(USB_PMA_BASE + rxbuf_ofs);
 	uint16_t res = MIN(USB_BT16_GET(BT_RX_COUNT(ep_id)) & 0x3ff, len);
 	uint8_t odd = res & 1;
 	len = res >> 1;

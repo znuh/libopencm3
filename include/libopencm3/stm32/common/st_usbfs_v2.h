@@ -43,8 +43,6 @@
 
 #include <libopencm3/stm32/common/st_usbfs_ext.h>
 
-#define	ST_USBFS_DRIVER				&st_usbfs_v2_usb_driver
-
 #endif
 /** @cond */
 #else
