@@ -100,6 +100,8 @@
 #define BT_RX_ADDR(EP)				(USB_BTABLE_OFS + (EP) * 8 + 4)
 #define BT_RX_COUNT(EP)				(USB_BTABLE_OFS + (EP) * 8 + 6)
 
+/* --- USB Packet Memory (PMA) Access Schemes ------------------------------- */
+
 #ifdef ST_USBFS_PMA_AS_1X16
 /* Dedicated packet buffer memory SRAM access scheme: 1 x 16 bits / word (see RM) */
 #define USB_BT32_GET(OFS)			GET_REG32(USB_PMA_BASE + ((OFS)<<1))
@@ -122,6 +124,12 @@
 #define CHEP_BD_COUNT_SHIFT			16
 #define CHEP_BD_COUNT_MASK			0x3ff
 #endif /* ST_USBFS_PMA_AS_1X32 */
+
+#if (defined(ST_USBFS_PMA_AS_1X16) && defined(ST_USBFS_PMA_AS_2X16)) \
+	|| (defined(ST_USBFS_PMA_AS_1X16) && defined(ST_USBFS_PMA_AS_1X32)) \
+	|| (defined(ST_USBFS_PMA_AS_2X16) && defined(ST_USBFS_PMA_AS_1X32))
+#define PMA_AS_MULTIPLE
+#endif
 
 #endif
 /** @cond */

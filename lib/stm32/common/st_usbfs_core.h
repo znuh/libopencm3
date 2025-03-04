@@ -51,6 +51,12 @@ void st_usbfs_poll(usbd_device *usbd_dev);
 
 /* These must be implemented by the device specific driver */
 
+struct pma_ops_s {
+	uint16_t (*assign_buffer)(uint16_t ep_id, uint32_t dir_tx, uint16_t *ram_ofs, uint16_t rx_blocks);
+	void (*copy_to_pm)(uint16_t ep_id, uint16_t txbuf_ofs, const void *vsrc, uint16_t len);
+	uint16_t (*copy_from_pm)(uint16_t ep_id, uint16_t rxbuf_ofs, void *vdst, uint16_t len);
+};
+
 /**
  * Assign a data buffer in packet memory for an endpoint
  *

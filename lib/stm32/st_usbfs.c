@@ -22,6 +22,7 @@
 /* Note: could check for (un)aligned access being prohibited with defined(__ARM_ARCH_6M__) */
 
 #include <libopencm3/cm3/common.h>
+#include <libopencm3/cm3/assert.h>
 #include <libopencm3/stm32/rcc.h>
 
 /* check if Clock Recovery System is available */
@@ -38,10 +39,12 @@
 static struct _usbd_device st_usbfs_dev;
 static uint16_t epbuf_addr[USB_MAX_ENDPOINTS][2];
 
+static const struct pma_ops_s *pma_ops = 0;
+
 /* --- Dedicated packet buffer memory SRAM access scheme: 32 bits ---------------------- */
 #ifdef ST_USBFS_PMA_AS_1X32
 
-static inline uint16_t assign_buffer_1x32(uint16_t ep_id, uint32_t dir_tx, uint16_t *ram_ofs, uint16_t rx_blocks) {
+static uint16_t assign_buffer_1x32(uint16_t ep_id, uint32_t dir_tx, uint16_t *ram_ofs, uint16_t rx_blocks) {
 	uint16_t ofs = (*ram_ofs + 3) & ~3;
 	*ram_ofs = ofs;
 	if(!dir_tx)
@@ -50,7 +53,7 @@ static inline uint16_t assign_buffer_1x32(uint16_t ep_id, uint32_t dir_tx, uint1
 }
 
 /* NOTE: could check if src buf is 32-Bit aligned (!(buf&3)) and do a faster copy then */
-static inline void copy_to_pm_1x32(uint16_t ep_id, uint16_t txbuf_ofs, const void *vsrc, uint16_t len)
+static void copy_to_pm_1x32(uint16_t ep_id, uint16_t txbuf_ofs, const void *vsrc, uint16_t len)
 {
 	volatile uint32_t *PM = (volatile uint32_t *) (USB_PMA_BASE + txbuf_ofs);
 	const uint8_t *src = vsrc;
@@ -88,7 +91,7 @@ static inline void copy_to_pm_1x32(uint16_t ep_id, uint16_t txbuf_ofs, const voi
  * Will fail for Low Speed mode, but LS mode is too exotic to justify a synthetic delay here.
  */
 /* NOTE: could check if dst buf is 32-Bit aligned (!(buf&3)) and do a faster copy then */
-static inline uint16_t copy_from_pm_1x32(uint16_t ep_id, uint16_t rxbuf_ofs, void *vdst, uint16_t len)
+static uint16_t copy_from_pm_1x32(uint16_t ep_id, uint16_t rxbuf_ofs, void *vdst, uint16_t len)
 {
 	uint32_t v, i, count = (*USB_CHEP_RXTXBD(ep_id) >> CHEP_BD_COUNT_SHIFT) & CHEP_BD_COUNT_MASK;
 	volatile uint32_t *PM = (volatile uint32_t *) (USB_PMA_BASE + rxbuf_ofs);
@@ -103,12 +106,18 @@ static inline uint16_t copy_from_pm_1x32(uint16_t ep_id, uint16_t rxbuf_ofs, voi
 	return count;
 }
 
+static const struct pma_ops_s pma_ops_1x32 = {
+	.assign_buffer 	= assign_buffer_1x32,
+	.copy_to_pm		= copy_to_pm_1x32,
+	.copy_from_pm	= copy_from_pm_1x32,
+};
+
 #endif /* ST_USBFS_PMA_AS_1X32 */
 
 /* --- Dedicated packet buffer memory SRAM access scheme: 2 x 16 bits / word ------------- */
 #ifdef ST_USBFS_PMA_AS_2X16
 
-static inline uint16_t assign_buffer_2x16(uint16_t ep_id, uint32_t dir_tx, uint16_t *ram_ofs, uint16_t rx_blocks) {
+static uint16_t assign_buffer_2x16(uint16_t ep_id, uint32_t dir_tx, uint16_t *ram_ofs, uint16_t rx_blocks) {
 	uint16_t ofs = *ram_ofs;
 	USB_BT16_SET(dir_tx ? BT_TX_ADDR(ep_id) : BT_RX_ADDR(ep_id), ofs);
 	if(!dir_tx)
@@ -116,7 +125,7 @@ static inline uint16_t assign_buffer_2x16(uint16_t ep_id, uint32_t dir_tx, uint1
 	return ofs;
 }
 
-static inline void copy_to_pm_2x16(uint16_t ep_id, uint16_t txbuf_ofs, const void *vsrc, uint16_t len)
+static void copy_to_pm_2x16(uint16_t ep_id, uint16_t txbuf_ofs, const void *vsrc, uint16_t len)
 {
 	volatile uint16_t *PM = (volatile void *)(USB_PMA_BASE + txbuf_ofs);
 	const uint8_t *src = vsrc;
@@ -136,7 +145,7 @@ static inline void copy_to_pm_2x16(uint16_t ep_id, uint16_t txbuf_ofs, const voi
 	USB_BT16_SET(BT_TX_COUNT(ep_id), len);
 }
 
-static inline uint16_t copy_from_pm_2x16(uint16_t ep_id, uint16_t rxbuf_ofs, void *dst, uint16_t len)
+static uint16_t copy_from_pm_2x16(uint16_t ep_id, uint16_t rxbuf_ofs, void *dst, uint16_t len)
 {
 	const volatile uint16_t *PM = (volatile void *)(USB_PMA_BASE + rxbuf_ofs);
 	uint16_t res = MIN(USB_BT16_GET(BT_RX_COUNT(ep_id)) & 0x3ff, len);
@@ -161,12 +170,18 @@ static inline uint16_t copy_from_pm_2x16(uint16_t ep_id, uint16_t rxbuf_ofs, voi
 	return res;
 }
 
+static const struct pma_ops_s pma_ops_2x16 = {
+	.assign_buffer 	= assign_buffer_2x16,
+	.copy_to_pm		= copy_to_pm_2x16,
+	.copy_from_pm	= copy_from_pm_2x16,
+};
+
 #endif /* ST_USBFS_PMA_AS_2X16 */
 
 /* --- Dedicated packet buffer memory SRAM access scheme: 1 x 16 bits / word -------- */
 #ifdef ST_USBFS_PMA_AS_1X16
 
-static inline uint16_t assign_buffer_1x16(uint16_t ep_id, uint32_t dir_tx, uint16_t *ram_ofs, uint16_t rx_blocks) {
+static uint16_t assign_buffer_1x16(uint16_t ep_id, uint32_t dir_tx, uint16_t *ram_ofs, uint16_t rx_blocks) {
 	uint16_t ofs = *ram_ofs;
 	USB_BT32_SET(dir_tx ? BT_TX_ADDR(ep_id) : BT_RX_ADDR(ep_id), ofs);
 	if(!dir_tx)
@@ -174,7 +189,7 @@ static inline uint16_t assign_buffer_1x16(uint16_t ep_id, uint32_t dir_tx, uint1
 	return ofs << 1; /* PMA access addr. must be multiplied by 2 */
 }
 
-static inline void copy_to_pm_1x16(uint16_t ep_id, uint16_t txbuf_ofs, const void *vsrc, uint16_t len)
+static void copy_to_pm_1x16(uint16_t ep_id, uint16_t txbuf_ofs, const void *vsrc, uint16_t len)
 {
 	volatile uint32_t *PM = (volatile void *)(USB_PMA_BASE + txbuf_ofs);
 	uint32_t n_words = len >> 1;
@@ -191,7 +206,7 @@ static inline void copy_to_pm_1x16(uint16_t ep_id, uint16_t txbuf_ofs, const voi
 	USB_BT32_SET(BT_TX_COUNT(ep_id), len);
 }
 
-static inline uint16_t copy_from_pm_1x16(uint16_t ep_id, uint16_t rxbuf_ofs, void *vdst, uint16_t len)
+static uint16_t copy_from_pm_1x16(uint16_t ep_id, uint16_t rxbuf_ofs, void *vdst, uint16_t len)
 {
 	const volatile uint16_t *PM = (volatile void *)(USB_PMA_BASE + rxbuf_ofs);
 	uint16_t res = MIN(USB_BT32_GET(BT_RX_COUNT(ep_id)) & 0x3ff, len);
@@ -205,6 +220,12 @@ static inline uint16_t copy_from_pm_1x16(uint16_t ep_id, uint16_t rxbuf_ofs, voi
 		*(uint8_t *) dst = *(uint8_t *) PM;
 	return res;
 }
+
+static const struct pma_ops_s pma_ops_1x16 = {
+	.assign_buffer 	= assign_buffer_1x16,
+	.copy_to_pm		= copy_to_pm_1x16,
+	.copy_from_pm	= copy_from_pm_1x16,
+};
 
 #endif /* ST_USBFS_PMA_AS_1X16 */
 
@@ -220,32 +241,13 @@ static inline uint16_t copy_from_pm_1x16(uint16_t ep_id, uint16_t rxbuf_ofs, voi
  */
 void st_usbfs_assign_buffer(uint16_t ep_id, uint32_t dir_tx, uint16_t *ram_ofs, uint16_t rx_blocks)
 {
-	uint16_t ofs;
-#if defined(ST_USBFS_PMA_AS_1X16)
-	ofs = assign_buffer_1x16(ep_id, dir_tx, ram_ofs, rx_blocks);
-#elif defined(ST_USBFS_PMA_AS_2X16)
-	ofs = assign_buffer_2x16(ep_id, dir_tx, ram_ofs, rx_blocks);
-#elif defined(ST_USBFS_PMA_AS_1X32)
-	ofs = assign_buffer_1x32(ep_id, dir_tx, ram_ofs, rx_blocks);
-#else
-#error "unknown PMA access scheme"
-#endif
-	epbuf_addr[ep_id][dir_tx] = ofs;
+	epbuf_addr[ep_id][dir_tx] = pma_ops->assign_buffer(ep_id, dir_tx, ram_ofs, rx_blocks);
 }
 
 void st_usbfs_copy_to_pm(uint16_t ep_id, const void *src, uint16_t len)
 {
 	uint16_t txbuf_ofs = epbuf_addr[ep_id][USB_BUF_TX];
-
-#if defined(ST_USBFS_PMA_AS_1X16)
-	copy_to_pm_1x16(ep_id, txbuf_ofs, src, len);
-#elif defined(ST_USBFS_PMA_AS_2X16)
-	copy_to_pm_2x16(ep_id, txbuf_ofs, src, len);
-#elif defined(ST_USBFS_PMA_AS_1X32)
-	copy_to_pm_1x32(ep_id, txbuf_ofs, src, len);
-#else
-#error "unknown PMA access scheme"
-#endif
+	pma_ops->copy_to_pm(ep_id, txbuf_ofs, src, len);
 }
 
 /**
@@ -258,16 +260,7 @@ void st_usbfs_copy_to_pm(uint16_t ep_id, const void *src, uint16_t len)
 uint16_t st_usbfs_copy_from_pm(uint16_t ep_id, void *dst, uint16_t len)
 {
 	uint16_t rxbuf_ofs = epbuf_addr[ep_id][USB_BUF_RX];
-
-#if defined(ST_USBFS_PMA_AS_1X16)
-	return copy_from_pm_1x16(ep_id, rxbuf_ofs, dst, len);
-#elif defined(ST_USBFS_PMA_AS_2X16)
-	return copy_from_pm_2x16(ep_id, rxbuf_ofs, dst, len);
-#elif defined(ST_USBFS_PMA_AS_1X32)
-	return copy_from_pm_1x32(ep_id, rxbuf_ofs, dst, len);
-#else
-#error "unknown PMA access scheme"
-#endif
+	return pma_ops->copy_from_pm(ep_id, rxbuf_ofs, dst, len);
 }
 
 #ifdef ST_USBFS_HAVE_BCD
@@ -303,6 +296,18 @@ static usbd_device *st_usbfs_usbd_init(void)
 	 * USB interface to enter error mode (USB_ISTR_ERR set).
 	 * Datasheet states t_STARTUP: 1us */
 	for(uint32_t i=128;i;i--) __asm__("nop");
+
+#ifdef PMA_AS_MULTIPLE
+	pma_ops = &pma_ops_1x16; /* TBD */
+#elif defined(ST_USBFS_PMA_AS_1X16)
+	pma_ops = &pma_ops_1x16;
+#elif defined(ST_USBFS_PMA_AS_2X16)
+	pma_ops = &pma_ops_2x16;
+#elif defined(ST_USBFS_PMA_AS_1X32)
+	pma_ops = &pma_ops_1x32;
+#else
+#error "unknown PMA access scheme"
+#endif
 
 	SET_REG(USB_CNTR_REG, 0);
 

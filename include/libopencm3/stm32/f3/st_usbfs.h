@@ -22,6 +22,11 @@
 #	error Do not include directly !
 #else
 
+/* F302x{6,8,D,E} and F303x{D,E} use a 2x16 PMA access scheme instead of the
+ * classic 1x16. We enable this access scheme here additionally.
+ * 1x16 PMA access scheme for the other F302/F303 is enabled by default in st_usbfs_v1.h */
+#define ST_USBFS_PMA_AS_2X16
+
 #include <libopencm3/stm32/common/st_usbfs_v1.h>
 
 #endif
