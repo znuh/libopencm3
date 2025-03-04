@@ -52,11 +52,12 @@ enum usbd_request_return_codes {
 typedef struct _usbd_driver usbd_driver;
 typedef struct _usbd_device usbd_device;
 
+extern const usbd_driver st_usbfs_usb_driver;
 extern const usbd_driver st_usbfs_v1_usb_driver;
 extern const usbd_driver stm32f107_usb_driver;
 extern const usbd_driver stm32f207_usb_driver;
 extern const usbd_driver st_usbfs_v2_usb_driver;
-extern const usbd_driver st_usbfs_v3_usb_driver;
+#define st_usbfs_v3_usb_driver st_usbfs_usb_driver
 #define otgfs_usb_driver stm32f107_usb_driver
 #define otghs_usb_driver stm32f207_usb_driver
 extern const usbd_driver efm32lg_usb_driver;

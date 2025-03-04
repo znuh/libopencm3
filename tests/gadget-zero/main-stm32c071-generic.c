@@ -55,7 +55,7 @@ int main(void)
 	crs_autotrim_usb_enable();
 	rcc_set_usbclk_source(RCC_HSIUSB48);
 
-	usbd_device *usbd_dev = gadget0_init(&st_usbfs_v3_usb_driver,
+	usbd_device *usbd_dev = gadget0_init(&st_usbfs_usb_driver,
 					     "stm32c071-generic");
 
 	ER_DPRINTF("bootup complete\n");

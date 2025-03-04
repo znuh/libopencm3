@@ -36,11 +36,131 @@
 #include "common/st_usbfs_core.h"
 
 static struct _usbd_device st_usbfs_dev;
-
 static uint16_t epbuf_addr[USB_MAX_ENDPOINTS][2];
 
+/* --- Dedicated packet buffer memory SRAM access scheme: 32 bits ---------------------- */
+#ifdef ST_USBFS_PMA_AS_1X32
+
+static inline void assign_buffer_1x32(uint16_t ep_id, uint32_t dir_tx, uint16_t ofs, uint16_t rx_blocks) {
+	if(!dir_tx)
+		*USB_CHEP_RXTXBD(ep_id) = (rx_blocks << CHEP_BD_COUNT_SHIFT) | ofs;
+}
+
+/* NOTE: could check if src buf is 32-Bit aligned (!(buf&3)) and do a faster copy then */
+static inline void copy_to_pm_1x32(uint16_t ep_id, uint16_t buf_ofs, const void *buf, uint16_t len)
+{
+	volatile uint32_t *PM = (volatile uint32_t *) (USB_PMA_BASE + buf_ofs);
+	const uint8_t *lbuf = buf;
+	uint32_t i,v;
+
+	for (v=i=0; i<len; i++, lbuf++) {
+		v<<=8;
+		v|=*lbuf;
+		if((i&3) == 3)
+			*PM++ = __builtin_bswap32(v);
+	}
+
+	// remainder?
+	i = i&3;
+	if(i) {
+		i = (4-i) << 3;
+		*PM = __builtin_bswap32(v<<i);
+	}
+
+	*USB_CHEP_TXRXBD(ep_id) = (len << CHEP_BD_COUNT_SHIFT) | buf_ofs;
+}
+
+/* ERRATUM for STM32C071x8/xB (ES0618 - Rev 1):
+ *  Buffer description table update completes after CTR interrupt triggers
+ * Description:
+ *  During OUT transfers, the correct transfer interrupt (CTR) is triggered a little before the last USB SRAM accesses
+ *  have completed. If the software responds quickly to the interrupt, the full buffer contents may not be correct.
+ * Workaround:
+ *  Software should ensure that a small delay is included before accessing the SRAM contents. This delay should be
+ *  800 ns in Full Speed mode and 6.4 μs in Low Speed mode.
+ * ---------------------------------------------------------------------------------------------------------------------
+ * At 48MHz the delay needed is 39 cycles.
+ * Counting instruction cycles in the disassembly from st_usbfs_poll: istr = *USB_ISTR_REG
+ * to this function entry takes >50 cycles, so no delay needed here for Full Speed.
+ * Will fail for Low Speed mode, but LS mode is too exotic to justify a synthetic delay here.
+ */
+/* NOTE: could check if dst buf is 32-Bit aligned (!(buf&3)) and do a faster copy then */
+static inline uint16_t copy_from_pm_1x32(uint16_t ep_id, void *buf, uint16_t len)
+{
+	uint32_t v, i, buf_desc = *USB_CHEP_RXTXBD(ep_id);
+	uint32_t count = (buf_desc >> CHEP_BD_COUNT_SHIFT) & CHEP_BD_COUNT_MASK;
+	volatile uint32_t *PM = (volatile uint32_t *) (USB_PMA_BASE + epbuf_addr[ep_id][USB_BUF_RX]);
+	uint8_t *dst = buf;
+
+	count = MIN(count, len);
+	for(v=i=0; i<count; i++, dst++, v>>=8) {
+		if(!(i&3))
+			v = *PM++;
+		*dst = v&0xff;
+	}
+	return count;
+}
+
+#endif /* ST_USBFS_PMA_AS_1X32 */
+
+/* --- Common (dispatch) functions for all peripheral variants ---------------------- */
+
+/**
+ * Assign a data buffer in packet memory for an endpoint
+ *
+ * @param ep_id Endpoint ID (0..7)
+ * @param dir_tx 1 if TX endpoint, 0 for RX
+ * @param ram_ofs Pointer to RAM offset for packet buffer
+ * @param rx_blocks BLSIZE / NUM_BLOCK[4:0] (shifted) for rxcount register - 0 for TX
+ */
+void st_usbfs_assign_buffer(uint16_t ep_id, uint32_t dir_tx, uint16_t *ram_ofs, uint16_t rx_blocks) {
+	uint16_t ofs = *ram_ofs;
+
+#ifdef ST_USBFS_PMA_AS_1X32
+	/* Align buffer to 32Bit word. *Should* not be necessary, b/c length of 
+	 * previous buffer is also rounded up to 32 bits, but better safe than sorry... */
+	 ofs = (ofs + 3) & ~3;
+	 *ram_ofs = ofs;
+	assign_buffer_1x32(ep_id, dir_tx, ofs, rx_blocks);
+#endif
+
+	epbuf_addr[ep_id][dir_tx] = ofs;
+}
+
+void st_usbfs_copy_to_pm(uint16_t ep_id, const void *buf, uint16_t len)
+{
+	uint16_t buf_ofs = epbuf_addr[ep_id][USB_BUF_TX];
+
+#ifdef ST_USBFS_PMA_AS_1X32
+	copy_to_pm_1x32(ep_id, buf_ofs, buf, len);
+#endif
+}
+
+/**
+ * Copy a data buffer from packet memory.
+ *
+ * @param ep_id Endpoint ID (0..7)
+ * @param buf Destination pointer for data buffer.
+ * @param len Number of bytes to copy.
+ */
+uint16_t st_usbfs_copy_from_pm(uint16_t ep_id, void *buf, uint16_t len)
+{
+#ifdef ST_USBFS_PMA_AS_1X32
+	return copy_from_pm_1x32(ep_id, buf, len);
+#endif
+}
+
+#ifdef ST_USBFS_HAVE_BCD
+static void st_usbfs_disconnect(usbd_device *usbd_dev, bool disconnected)
+{
+	(void)usbd_dev;
+	uint16_t reg = GET_REG(USB_BCDR_REG);
+	SET_REG(USB_BCDR_REG, disconnected ? (reg & ~USB_BCDR_DPPU) : (reg | USB_BCDR_DPPU));
+}
+#endif
+
 /** Initialize the USB device controller hardware of the STM32. */
-static usbd_device *st_usbfs_v3_usbd_init(void)
+static usbd_device *st_usbfs_usbd_init(void)
 {
 	volatile uint32_t *BD = (volatile uint32_t *) USB_PMA_BASE; // buffer descriptors table
 	uint32_t n_descriptors = 2 * 8; // CHEP_TXRXBD + CHEP_RXTXBD for each of the 8 CHEPs
@@ -70,107 +190,27 @@ static usbd_device *st_usbfs_v3_usbd_init(void)
 	} while(--n_descriptors);
 
 	SET_REG(USB_CNTR_REG, 0);
+
+#ifdef ST_USBFS_HAVE_BTADDR
+	SET_REG(USB_BTABLE_REG, USB_BTABLE_OFS);
+#endif
+
 	SET_REG(USB_ISTR_REG, 0);
 
 	/* Enable RESET, SUSPEND, RESUME and CTR interrupts. */
 	SET_REG(USB_CNTR_REG, USB_CNTR_RESETM | USB_CNTR_CTRM |
 		USB_CNTR_SUSPM | USB_CNTR_WKUPM);
+
+#ifdef ST_USBFS_HAVE_BCD
+	/* enable pullup */
 	SET_REG(USB_BCDR_REG, USB_BCDR_DPPU);
+#endif
+
 	return &st_usbfs_dev;
 }
 
-/**
- * Assign a data buffer in packet memory for an endpoint
- *
- * @param ep_id Endpoint ID (0..7)
- * @param dir_tx 1 if TX endpoint, 0 for RX
- * @param ram_ofs Pointer to RAM offset for packet buffer
- * @param rx_blocks BLSIZE / NUM_BLOCK[4:0] (shifted) for rxcount register - 0 for TX
- */
-void st_usbfs_assign_buffer(uint16_t ep_id, uint32_t dir_tx, uint16_t *ram_ofs, uint16_t rx_blocks) {
-	uint16_t ofs = (*ram_ofs + 3) & ~3;
-	*ram_ofs = ofs;
-	epbuf_addr[ep_id][dir_tx] = ofs;
-	if(!dir_tx)
-		*USB_CHEP_RXTXBD(ep_id) = (rx_blocks << CHEP_BD_COUNT_SHIFT) | ofs;
-}
-
-/* NOTE: could check if src buf is 32-Bit aligned (!(buf&3)) and do a faster copy then */
-void st_usbfs_copy_to_pm(uint16_t ep_id, const void *buf, uint16_t len)
-{
-	uint32_t buf_ofs = epbuf_addr[ep_id][USB_BUF_TX];
-	volatile uint32_t *PM = (volatile uint32_t *) (USB_PMA_BASE + buf_ofs);
-	const uint8_t *lbuf = buf;
-	uint32_t i,v;
-
-	for (v=i=0; i<len; i++, lbuf++) {
-		v<<=8;
-		v|=*lbuf;
-		if((i&3) == 3)
-			*PM++ = __builtin_bswap32(v);
-	}
-
-	// remainder?
-	i = i&3;
-	if(i) {
-		i = (4-i) << 3;
-		*PM = __builtin_bswap32(v<<i);
-	}
-
-	*USB_CHEP_TXRXBD(ep_id) = (len << CHEP_BD_COUNT_SHIFT) | buf_ofs;
-}
-
-/**
- * Copy a data buffer from packet memory.
- *
- * @param ep_id Endpoint ID (0..7)
- * @param buf Destination pointer for data buffer.
- * @param len Number of bytes to copy.
- */
-/* ERRATUM for STM32C071x8/xB (ES0618 - Rev 1):
- *  Buffer description table update completes after CTR interrupt triggers
- * Description:
- *  During OUT transfers, the correct transfer interrupt (CTR) is triggered a little before the last USB SRAM accesses
- *  have completed. If the software responds quickly to the interrupt, the full buffer contents may not be correct.
- * Workaround:
- *  Software should ensure that a small delay is included before accessing the SRAM contents. This delay should be
- *  800 ns in Full Speed mode and 6.4 μs in Low Speed mode.
- * ---------------------------------------------------------------------------------------------------------------------
- * At 48MHz the delay needed is 39 cycles.
- * Counting instruction cycles in the disassembly from st_usbfs_poll: istr = *USB_ISTR_REG
- * to this function entry takes >50 cycles, so no delay needed here for Full Speed.
- * Will fail for Low Speed mode, but LS mode is too exotic to justify a synthetic delay here.
- */
-/* NOTE: could check if dst buf is 32-Bit aligned (!(buf&3)) and do a faster copy then */
-uint16_t st_usbfs_copy_from_pm(uint16_t ep_id, void *buf, uint16_t len)
-{
-	uint32_t v, i, buf_desc = *USB_CHEP_RXTXBD(ep_id);
-	uint32_t count = (buf_desc >> CHEP_BD_COUNT_SHIFT) & CHEP_BD_COUNT_MASK;
-	volatile uint32_t *PM = (volatile uint32_t *) (USB_PMA_BASE + epbuf_addr[ep_id][USB_BUF_RX]);
-	uint8_t *dst = buf;
-
-	count = MIN(count, len);
-	for(v=i=0; i<count; i++, dst++, v>>=8) {
-		if(!(i&3))
-			v = *PM++;
-		*dst = v&0xff;
-	}
-	return count;
-}
-
-static void st_usbfs_v3_disconnect(usbd_device *usbd_dev, bool disconnected)
-{
-	(void)usbd_dev;
-	uint16_t reg = GET_REG(USB_BCDR_REG);
-	if (disconnected) {
-		SET_REG(USB_BCDR_REG, reg & ~USB_BCDR_DPPU);
-	} else {
-		SET_REG(USB_BCDR_REG, reg | USB_BCDR_DPPU);
-	}
-}
-
-const struct _usbd_driver st_usbfs_v3_usb_driver = {
-	.init = st_usbfs_v3_usbd_init,
+const struct _usbd_driver st_usbfs_usb_driver = {
+	.init = st_usbfs_usbd_init,
 	.set_address = st_usbfs_set_address,
 	.ep_setup = st_usbfs_ep_setup,
 	.ep_reset = st_usbfs_endpoints_reset,
@@ -179,6 +219,8 @@ const struct _usbd_driver st_usbfs_v3_usb_driver = {
 	.ep_nak_set = st_usbfs_ep_nak_set,
 	.ep_write_packet = st_usbfs_ep_write_packet,
 	.ep_read_packet = st_usbfs_ep_read_packet,
-	.disconnect = st_usbfs_v3_disconnect,
+#ifdef ST_USBFS_HAVE_BCD
+	.disconnect = st_usbfs_disconnect,
+#endif
 	.poll = st_usbfs_poll,
 };
