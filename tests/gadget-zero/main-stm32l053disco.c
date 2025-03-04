@@ -77,7 +77,7 @@ int main(void)
 	rcc_osc_on(RCC_HSI48);
 	rcc_wait_for_osc_ready(RCC_HSI48);
 
-	usbd_device *usbd_dev = gadget0_init(&st_usbfs_v2_usb_driver,
+	usbd_device *usbd_dev = gadget0_init(&st_usbfs_usb_driver,
 					     "stm32l053disco");
 
 	ER_DPRINTF("bootup complete\n");

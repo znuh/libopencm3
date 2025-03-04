@@ -66,7 +66,7 @@ int main(void)
 	rcc_periph_clock_enable(RCC_SYSCFG);
 	SYSCFG_PMC |= SYSCFG_PMC_USB_PU;
 
-	usbd_device *usbd_dev = gadget0_init(&st_usbfs_v1_usb_driver,
+	usbd_device *usbd_dev = gadget0_init(&st_usbfs_usb_driver,
 					     "stm32l1-generic");
 
 	ER_DPRINTF("bootup complete\n");
