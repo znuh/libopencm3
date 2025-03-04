@@ -51,38 +51,10 @@ void st_usbfs_poll(usbd_device *usbd_dev);
 
 /* These must be implemented by the device specific driver */
 
-struct pma_ops_s {
+struct st_usbfs_pm_s {
 	uint16_t (*assign_buffer)(uint16_t ep_id, uint32_t dir_tx, uint16_t *ram_ofs, uint16_t rx_blocks);
-	void (*copy_to_pm)(uint16_t ep_id, uint16_t txbuf_ofs, const void *vsrc, uint16_t len);
-	uint16_t (*copy_from_pm)(uint16_t ep_id, uint16_t rxbuf_ofs, void *vdst, uint16_t len);
+	void (*write)(uint16_t ep_id, uint16_t txbuf_ofs, const void *vsrc, uint16_t len);
+	uint16_t (*read)(uint16_t ep_id, uint16_t rxbuf_ofs, void *vdst, uint16_t len);
 };
-
-/**
- * Assign a data buffer in packet memory for an endpoint
- *
- * @param ep_id Endpoint ID (0..7)
- * @param dir_tx 1 if TX endpoint, 0 for RX
- * @param ram_ofs Pointer to RAM offset for packet buffer
- * @param rx_blocks BLSIZE / NUM_BLOCK[4:0] (shifted) for rxcount register - 0 for TX
- */
-void st_usbfs_assign_buffer(uint16_t ep_id, uint32_t dir_tx, uint16_t *ram_ofs, uint16_t rx_blocks);
-
-/**
- * Copy a data buffer from packet memory.
- *
- * @param ep_id Endpoint ID (0..7)
- * @param buf Destination pointer for data buffer.
- * @param len Number of bytes to copy.
- */
-uint16_t st_usbfs_copy_from_pm(uint16_t ep_id, void *buf, uint16_t len);
-
-/**
- * Copy a data buffer to packet memory.
- *
- * @param ep_id Endpoint ID (0..7)
- * @param buf Source pointer
- * @param len Number of bytes to copy.
- */
-void st_usbfs_copy_to_pm(uint16_t ep_id, const void *buf, uint16_t len);
 
 #endif
