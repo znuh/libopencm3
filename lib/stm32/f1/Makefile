@@ -59,7 +59,7 @@ OBJS += usb.o usb_control.o usb_standard.o usb_msc.o
 OBJS += usb_hid.o
 OBJS += usb_audio.o usb_cdc.o usb_midi.o
 OBJS += usb_dwc_common.o usb_f107.o
-OBJS += st_usbfs_core.o st_usbfs_v1.o
+OBJS += st_usbfs_core.o st_usbfs.o
 
 VPATH += ../../usb:../:../../cm3:../common:../../ethernet
 
