@@ -64,7 +64,7 @@ static void pm_write_1x32(uint16_t ep_id, const void *vsrc, uint16_t len)
 	uint16_t txbuf_ofs = epbuf_addr[ep_id][USB_BUF_TX];
 	volatile uint32_t *PM = (volatile uint32_t *) (USB_PMA_BASE + txbuf_ofs);
 	const uint8_t *src = vsrc;
-	uint32_t i,v;
+	uint32_t i, v, r = len&3;
 
 	for (v=i=0; i<len; i++, src++) {
 		v<<=8;
@@ -74,10 +74,9 @@ static void pm_write_1x32(uint16_t ep_id, const void *vsrc, uint16_t len)
 	}
 
 	// remainder?
-	i = i&3;
-	if(i) {
-		i = (4-i) << 3;
-		*PM = __builtin_bswap32(v<<i);
+	if(r) {
+		r = (4-r) << 3;
+		*PM = __builtin_bswap32(v << r);
 	}
 
 	*USB_CHEP_TXRXBD(ep_id) = (len << CHEP_BD_COUNT_SHIFT) | txbuf_ofs;
