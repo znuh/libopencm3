@@ -52,9 +52,9 @@ void st_usbfs_poll(usbd_device *usbd_dev);
 /* These must be implemented by the device specific driver */
 
 struct st_usbfs_pm_s {
-	uint16_t (*assign_buffer)(uint16_t ep_id, uint32_t dir_tx, uint16_t *ram_ofs, uint16_t rx_blocks);
-	void (*write)(uint16_t ep_id, uint16_t txbuf_ofs, const void *vsrc, uint16_t len);
-	uint16_t (*read)(uint16_t ep_id, uint16_t rxbuf_ofs, void *vdst, uint16_t len);
+	void (*assign_buffer)(uint16_t ep_id, uint32_t dir_tx, uint16_t *ram_ofs, uint16_t rx_blocks);
+	void (*write)(uint16_t ep_id, const void *vsrc, uint16_t len);
+	uint16_t (*read)(uint16_t ep_id, void *vdst, uint16_t len);
 };
 
 #endif

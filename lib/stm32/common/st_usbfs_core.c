@@ -39,7 +39,6 @@ extern const struct st_usbfs_pm_s *st_usbfs_pm;
  * The _usbd_driver should have a *private pointer for such stuff, but it doesn't. */
 static uint8_t st_usbfs_force_nak[USB_MAX_ENDPOINTS];
 static uint16_t tx_bufsize[USB_MAX_ENDPOINTS];
-static uint16_t epbuf_addr[USB_MAX_ENDPOINTS][2];
 
 /* NOTE:
  * The ST USBFS core has support for up to 8 endpoints (USB_MAX_ENDPOINTS).
@@ -119,7 +118,7 @@ void st_usbfs_ep_setup(usbd_device *dev, uint8_t addr, uint8_t type,
 	USB_SET_EP_TYPE(addr, typelookup[type]);
 
 	if (dir || (addr == 0)) {
-		epbuf_addr[addr][USB_BUF_TX] = st_usbfs_pm->assign_buffer(addr, USB_BUF_TX, &dev->pm_top, 0);
+		st_usbfs_pm->assign_buffer(addr, USB_BUF_TX, &dev->pm_top, 0);
 		if (callback) {
 			dev->user_callback_ctr[addr][USB_TRANSACTION_IN] =
 			    (void *)callback;
@@ -132,7 +131,7 @@ void st_usbfs_ep_setup(usbd_device *dev, uint8_t addr, uint8_t type,
 
 	if (!dir) {
 		uint32_t realsize = max_size;
-		epbuf_addr[addr][USB_BUF_RX] = st_usbfs_pm->assign_buffer(addr, USB_BUF_RX, &dev->pm_top, bufsize_to_rxblocks(&realsize) << 10);
+		st_usbfs_pm->assign_buffer(addr, USB_BUF_RX, &dev->pm_top, bufsize_to_rxblocks(&realsize) << 10);
 		if (callback) {
 			dev->user_callback_ctr[addr][USB_TRANSACTION_OUT] =
 			    (void *)callback;
@@ -232,7 +231,7 @@ uint16_t st_usbfs_ep_write_packet(usbd_device *dev, uint8_t addr,
 	/* Prevent EP TX buffer overflows by clamping the length to the allocated buffer size. */
 	len = MIN(len, tx_bufsize[addr]);
 
-	st_usbfs_pm->write(addr, epbuf_addr[addr][USB_BUF_TX], buf, len);
+	st_usbfs_pm->write(addr, buf, len);
 	USB_SET_EP_TX_STAT(addr, USB_EP_TX_STAT_VALID);
 
 	return len;
@@ -246,7 +245,7 @@ uint16_t st_usbfs_ep_read_packet(usbd_device *dev, uint8_t addr,
 		return 0;
 	}
 
-	len = st_usbfs_pm->read(addr, epbuf_addr[addr][USB_BUF_RX], buf, len);
+	len = st_usbfs_pm->read(addr, buf, len);
 
 	USB_CLR_EP_RX_CTR(addr);
 
