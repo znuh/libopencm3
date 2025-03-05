@@ -140,6 +140,12 @@ void st_usbfs_ep_setup(usbd_device *dev, uint8_t addr, uint8_t type,
 		USB_SET_EP_RX_STAT(addr, USB_EP_RX_STAT_VALID);
 		dev->pm_top += realsize;
 	}
+
+#ifdef USB_PMA_SIZE
+	/* prevent user from allocating buffers going beyond the packet memory RAM size */
+	if(dev->pm_top > USB_PMA_SIZE)
+		cm3_assert_not_reached();
+#endif
 }
 
 void st_usbfs_endpoints_reset(usbd_device *dev)
