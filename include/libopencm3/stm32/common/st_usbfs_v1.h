@@ -22,8 +22,8 @@
  *
  * Additional definitions for F1, F3, L1 devices:
  * -F102, F103 (RM0008)
- * -F302x{B,C}; *NOT* F302x{6,8,D,E} !! (USB_BTABLE access issues) (RM0365)
- * -F303x{B,C}; *NOT* F303x{D,E} !! (USB_BTABLE access issues) (RM0316)
+ * -F302 (RM0365)
+ * -F303 (RM0316)
  * -F37x (RM0313)
  * -L1xx (RM0038)
  */
