@@ -19,22 +19,25 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* Note: could check for (un)aligned access being prohibited with defined(__ARM_ARCH_6M__) */
-
 #include <libopencm3/cm3/common.h>
 #include <libopencm3/cm3/assert.h>
 #include <libopencm3/stm32/rcc.h>
-
-/* check if Clock Recovery System is available */
-#ifdef CRS_BASE
-#include <libopencm3/stm32/crs.h>
-#endif
 
 #include <libopencm3/stm32/tools.h>
 #include <libopencm3/stm32/st_usbfs.h>
 #include <libopencm3/usb/usbd.h>
 #include "../usb/usb_private.h"
 #include "common/st_usbfs_core.h"
+
+/* check if Clock Recovery System is available */
+#ifdef CRS_BASE
+#include <libopencm3/stm32/crs.h>
+#endif
+
+#ifdef PMA_AS_MULTIPLE
+#include <libopencm3/stm32/dbgmcu.h>
+#define GET_DEVICEID()	(DBGMCU_IDCODE & DBGMCU_IDCODE_DEV_ID_MASK)
+#endif
 
 static struct _usbd_device st_usbfs_dev;
 const struct st_usbfs_pm_s *st_usbfs_pm = 0;
@@ -53,7 +56,9 @@ static void assign_buffer_1x32(uint16_t ep_id, uint32_t dir_tx, uint16_t *ram_of
 		*USB_CHEP_RXTXBD(ep_id) = (rx_blocks << CHEP_BD_COUNT_SHIFT) | ofs;
 }
 
-/* NOTE: could check if src buf is 32-Bit aligned (!(buf&3)) and do a faster copy then */
+/* NOTES:
+ * - could check if src buf is 32-Bit aligned (!(buf&3)) and do a faster copy then
+ * - could check for (un)aligned access being prohibited with defined(__ARM_ARCH_6M__) */
 static void pm_write_1x32(uint16_t ep_id, const void *vsrc, uint16_t len)
 {
 	uint16_t txbuf_ofs = epbuf_addr[ep_id][USB_BUF_TX];
@@ -273,7 +278,15 @@ static usbd_device *st_usbfs_usbd_init(void)
 	for(uint32_t i=128;i;i--) __asm__("nop");
 
 #ifdef PMA_AS_MULTIPLE
-	st_usbfs_pm = &pm_1x16; /* TBD */
+#ifdef STM32F3
+	/* - F303x{B,C}, F302x{B,C}: DeviceID: 0x422 => PMA AS 1x16
+	 * - F303x{6,8}            : DeviceID: 0x438 => PMA AS 2x16
+	 * - F302x{6,8}            : DeviceID: 0x439 => PMA AS 2x16
+	 * - F303x{D,E}, F302x{D,E}: DeviceID: 0x446 => PMA AS 2x16 */
+	st_usbfs_pm = (GET_DEVICEID() == 0x422) ? &pm_1x16 : &pm_2x16;
+#else
+#error "Multiple PMA access schemes not implemented for this STM32 family"
+#endif /* STM32 family selection */
 #elif defined(ST_USBFS_PMA_AS_1X16)
 	st_usbfs_pm = &pm_1x16;
 #elif defined(ST_USBFS_PMA_AS_2X16)
