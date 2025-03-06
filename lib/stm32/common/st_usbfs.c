@@ -113,21 +113,37 @@ static void pm_write_1x32(uint16_t ep_id, const void *vsrc, uint16_t len)
  * to this function entry takes >50 cycles, so no delay needed here for Full Speed.
  * Will fail for Low Speed mode, but LS mode is too exotic to justify a synthetic delay here.
  */
-/* NOTE: could check if dst buf is 32-Bit aligned (!(buf&3)) and do a faster copy then */
 static uint16_t pm_read_1x32(uint16_t ep_id, void *vdst, uint16_t len)
 {
 	uint16_t rxbuf_ofs = epbuf_addr[ep_id][USB_BUF_RX];
-	uint32_t v, i, count = (*USB_CHEP_RXTXBD(ep_id) >> CHEP_BD_COUNT_SHIFT) & CHEP_BD_COUNT_MASK;
+	uint32_t v, i, n = (*USB_CHEP_RXTXBD(ep_id) >> CHEP_BD_COUNT_SHIFT) & CHEP_BD_COUNT_MASK;
 	volatile uint32_t *PM = (volatile uint32_t *) (USB_PMA_BASE + rxbuf_ofs);
 	uint8_t *dst = vdst;
 
-	count = MIN(count, len);
-	for(v=i=0; i<count; i++, dst++, v>>=8) {
+	len = n = MIN(n, len);
+
+	/* copy full words if possible */
+#ifdef __ARM_ARCH_6M__
+	/* Unaligned word access is not possible on a Cortex-M0(+) */
+	if(!(((uintptr_t) vdst) & 3)) {
+#else
+	/* Use unaligned word copy if not a Cortex-M0(+) */
+	if(1) {
+#endif
+		uint32_t *wdst = vdst;
+		for(uint32_t n_words = n>>2;n_words;n_words--)
+			*wdst++ = *PM++;
+		dst = (void *)wdst;
+		n&=3;
+	}
+
+	/* copy non-aligned words and/or remaining bytes */
+	for(v=i=0; i<n; i++, dst++, v>>=8) {
 		if(!(i&3))
 			v = *PM++;
 		*dst = v&0xff;
 	}
-	return count;
+	return len;
 }
 
 static const struct st_usbfs_pm_s pm_1x32 = {
