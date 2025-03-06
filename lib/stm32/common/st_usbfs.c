@@ -56,24 +56,41 @@ static void assign_buffer_1x32(uint16_t ep_id, uint32_t dir_tx, uint16_t *ram_of
 		*USB_CHEP_RXTXBD(ep_id) = (rx_blocks << CHEP_BD_COUNT_SHIFT) | ofs;
 }
 
-/* NOTES:
- * - could check if src buf is 32-Bit aligned (!(buf&3)) and do a faster copy then
- * - could check for (un)aligned access being prohibited with defined(__ARM_ARCH_6M__) */
 static void pm_write_1x32(uint16_t ep_id, const void *vsrc, uint16_t len)
 {
 	uint16_t txbuf_ofs = epbuf_addr[ep_id][USB_BUF_TX];
 	volatile uint32_t *PM = (volatile uint32_t *) (USB_PMA_BASE + txbuf_ofs);
 	const uint8_t *src = vsrc;
-	uint32_t i, v, r = len&3;
+	uint32_t i, v, n_bytes = len, r = len&3;
 
-	for (v=i=0; i<len; i++, src++) {
-		v<<=8;
-		v|=*src;
-		if((i&3) == 3)
-			*PM++ = __builtin_bswap32(v);
+	/* copy full words if possible */
+#ifdef __ARM_ARCH_6M__
+	/* Unaligned word access is not possible on a Cortex-M0(+) */
+	if(!(((uintptr_t) vsrc) & 3)) {
+#else
+	/* Use unaligned word copy if not a Cortex-M0(+) */
+	if(1) {
+#endif
+		const uint32_t *wsrc = vsrc;
+		for(uint32_t n_words = len>>2;n_words;n_words--)
+			*PM++ = *wsrc++;
+		src = (const void *)wsrc;
+		n_bytes = r;
 	}
 
-	// remainder?
+	/* read/copy non-aligned words and/or remaining bytes */
+	for (v=i=0; i < n_bytes; i++, src++) {
+		v<<=8;
+		v|=*src;
+#ifdef __ARM_ARCH_6M__
+		/* cannot happen on non-Cortex-M0(+), because leftover
+		 * of unaligned word copy will always be <4 Bytes */
+		if((i&3) == 3)
+			*PM++ = __builtin_bswap32(v);
+#endif
+	}
+
+	/* write remainder - if any */
 	if(r) {
 		r = (4-r) << 3;
 		*PM = __builtin_bswap32(v << r);
