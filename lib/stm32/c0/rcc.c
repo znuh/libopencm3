@@ -352,17 +352,25 @@ void rcc_set_peripheral_clk_sel(uint32_t periph, uint32_t sel)
 	uint8_t shift;
 	uint32_t mask;
 
-	/* TBD: USB in CCIPR2 */
-
 	switch (periph) {
 		case ADC1_BASE:
 			shift = RCC_CCIPR_ADCSEL_SHIFT;
 			mask = RCC_CCIPR_ADCSEL_MASK;
 			break;
+		/* I2S1 missing */
+		case I2C1_BASE:
+			shift = RCC_CCIPR_I2C1SEL_SHIFT;
+			mask = RCC_CCIPR_I2CxSEL_MASK;
+			break;
+		case I2C2_BASE:
+			shift = RCC_CCIPR_I2C2SEL_SHIFT;
+			mask = RCC_CCIPR_I2CxSEL_MASK;
+			break;
 		case USART1_BASE:
 			shift = RCC_CCIPR_USART1SEL_SHIFT;
 			mask = RCC_CCIPR_USARTxSEL_MASK;
 			break;
+		/* for USBFS use set_usbclk_source */
 		default:
 			cm3_assert_not_reached();
 			return;
