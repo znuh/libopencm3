@@ -84,7 +84,7 @@
 #define RCC_CR_HSIDIV_SHIFT		11
 #define RCC_CR_HSIDIV_MASK		0x7
 /** @defgroup rcc_cr_hsidiv HSI Div
- * @brief Division factor of the HSI16 oscillator to produce HSISYS clock
+ * @brief Division factor of the HSI48 oscillator to produce HSISYS clock
 @sa rcc_cr_hsidiv
 @{*/
 #define RCC_CR_HSIDIV_DIV1		0
@@ -102,11 +102,11 @@
 #define RCC_CR_HSION			(1 << 8)
 /**@}*/
 
-/* RCC TBD:
- * Bits 7:5 HSIKERDIV[2:0]: HSI48 kernel clock division factor
- * Bits 4:2 SYSDIV[2:0]: Clock division factor for system clock
- */
+#define RCC_CR_HSIKERDIV_SHIFT		5
+#define RCC_CR_HSIKERDIV_MASK		0x7
 
+#define RCC_CR_SYSDIV_SHIFT		0
+#define RCC_CR_SYSDIV_MASK		0x7
 
 /** @defgroup rcc_icscr ICSCR Internal Clock Source Calibration Register
 @{*/

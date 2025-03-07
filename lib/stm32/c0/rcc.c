@@ -380,6 +380,20 @@ void rcc_set_peripheral_clk_sel(uint32_t periph, uint32_t sel)
 	RCC_CCIPR = reg32 | (sel << shift);
 }
 
+/*
+static void rcc_set_hsiker_div(uint32_t div) {
+	uint32_t reg32 = RCC_CR & ~(RCC_CR_HSIKERDIV_MASK << RCC_CR_HSIKERDIV_SHIFT);
+	if((div < 1) || (div > 8))
+		cm3_assert_not_reached();
+	RCC_CR = reg32 | ((div-1) << RCC_CR_HSIKERDIV_SHIFT);
+}
+*/
+
+static uint32_t rcc_get_hsiker_freq(void) {
+	uint32_t div = ((RCC_CR >> RCC_CR_HSIKERDIV_SHIFT) & RCC_CR_HSIKERDIV_MASK) + 1;
+	return 48000000U / div;
+}
+
 /* TBD:
  * - USB in CCIPR2
  * - I2C1/2
@@ -399,7 +413,7 @@ static uint32_t rcc_get_clksel_freq(uint8_t shift) {
 	case RCC_CCIPR_USARTxSEL_LSE:
 		return 32768;
 	case RCC_CCIPR_USARTxSEL_HSIKER:
-		return 48000000U; /* TBD: division factor! */
+		return rcc_get_hsiker_freq();
 	}
 	cm3_assert_not_reached();
 }
