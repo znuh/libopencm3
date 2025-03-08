@@ -20,7 +20,9 @@
 # TODOs:
 # - add/check rcc functions - e.g. for kernel clocks
 
-# missing peripherals: WWDG, RTC, FDCAN
+# missing peripherals: RTC, FDCAN
+# RTC: incompatible w/ existing rtc_common_l1f024.h register map
+# FDCAN: ?
 
 LIBNAME		= libopencm3_stm32c0
 SRCLIBDIR	?= ../..
