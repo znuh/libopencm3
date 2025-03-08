@@ -36,6 +36,8 @@
 #       include <libopencm3/stm32/l1/adc.h>
 #elif defined(STM32L4)
 #       include <libopencm3/stm32/l4/adc.h>
+#elif defined(STM32C0)
+#       include <libopencm3/stm32/c0/adc.h>
 #elif defined(STM32G0)
 #       include <libopencm3/stm32/g0/adc.h>
 #elif defined(STM32G4)
