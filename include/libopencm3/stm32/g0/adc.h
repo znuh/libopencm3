@@ -289,7 +289,7 @@
 @{*/
 
 /** AWD2CR Analog watchdog channel selection */
-#define ADC_AW2CR_AWD2CHx_EN(x)			(1 << x)
+#define ADC_AW2CR_AWD2CHx_EN(x)			(1 << (x))
 
 /**@}*/
 
@@ -297,7 +297,7 @@
 @{*/
 
 /** AWD3CR Analog watchdog channel selection */
-#define ADC_AW3CR_AWD3CHx_EN(x)			(1 << x)
+#define ADC_AW3CR_AWD3CHx_EN(x)			(1 << (x))
 
 /**@}*/
 
