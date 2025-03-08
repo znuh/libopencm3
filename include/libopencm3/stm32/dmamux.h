@@ -20,7 +20,9 @@
 #include <libopencm3/cm3/common.h>
 #include <libopencm3/stm32/memorymap.h>
 
-#if defined(STM32G0)
+#if defined(STM32C0)
+#       include <libopencm3/stm32/g0/dmamux.h>
+#elif defined(STM32G0)
 #       include <libopencm3/stm32/g0/dmamux.h>
 #elif defined(STM32G4)
 #       include <libopencm3/stm32/g4/dmamux.h>
