@@ -401,6 +401,15 @@
 #define RCC_CCIPR_USARTxSEL_LSE			3
 /**@}*/
 
+#define RCC_CCIPR_SEL_MASK				0x3
+/** @defgroup rcc_ccipr_usart/i2csel USARTxSEL/I2CxSEL Common clock sources
+@{*/
+#define RCC_CCIPR_USART_I2C_SEL_PCLK		0
+#define RCC_CCIPR_USART_I2C_SEL_SYSCLK		1
+#define RCC_CCIPR_USART_I2C_SEL_HSIKER		2
+
+/**@}*/
+
 /**@}*/
 
 /** @defgroup rcc_ccipr2 CCIPR2 Peripherals Independent Clock Config Register 2
@@ -639,8 +648,7 @@ void rcc_clock_setup_in_hsi48_out_48mhz(void);
 void rcc_set_peripheral_clk_sel(uint32_t periph, uint32_t sel);
 uint32_t rcc_get_usart_clk_freq(uint32_t usart);
 uint32_t rcc_get_timer_clk_freq(uint32_t timer);
-// TBD
-//uint32_t rcc_get_i2c_clk_freq(uint32_t i2c);
+uint32_t rcc_get_i2c_clk_freq(uint32_t i2c);
 uint32_t rcc_get_spi_clk_freq(uint32_t spi);
 
 END_DECLS
