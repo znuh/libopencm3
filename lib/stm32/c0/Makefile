@@ -19,7 +19,8 @@
 
 # TODOs:
 # - add/check rcc functions - e.g. for kernel clocks
-# - add missing peripherals
+
+# missing peripherals: WWDG, RTC, FDCAN
 
 LIBNAME		= libopencm3_stm32c0
 SRCLIBDIR	?= ../..
@@ -37,7 +38,7 @@ TGT_CFLAGS	+= $(DEBUG_FLAGS)
 TGT_CFLAGS	+= $(STANDARD_FLAGS)
 
 ARFLAGS		= rcs
-#OBJS += adc.o adc_common_v2.o
+OBJS += adc.o adc_common_v2.o
 OBJS += crc_common_all.o
 OBJS += crs_common_all.o
 OBJS += desig_common_all.o desig_common_v1.o

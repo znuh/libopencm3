@@ -191,7 +191,7 @@
 
 /* SMP1 ADC Channel Sample Time selection */
 #define ADC_SMPR_SMPSEL_SHIFT			0x8
-#define ADC_SMPR_SMPSEL_MASK			0x7ffff
+#define ADC_SMPR_SMPSEL_MASK			0x7fffff
 #define ADC_SMPR_SMPSEL_CHANNEL_SHIFT(channel)	((channel) + ADC_SMPR_SMPSEL_SHIFT)
 #define ADC_SMPR_SMPSEL_CHANNEL_MASK			(1)
 /** @defgroup adc_smpr_smpsel ADC Sample Time selection
