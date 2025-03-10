@@ -118,8 +118,8 @@
 /* Dedicated packet buffer memory SRAM access scheme: 32 bits (see RM)
  * This new peripheral version usually(?) does not have a BTADDR register anymore.
  * The BT address is fixed zero. */
-#define USB_CHEP_TXRXBD(EP) 		((uint32_t *)(USB_PMA_BASE + ((EP) * 8 + 0) * 1))
-#define USB_CHEP_RXTXBD(EP) 		((uint32_t *)(USB_PMA_BASE + ((EP) * 8 + 4) * 1))
+#define USB_CHEP_TXRXBD(EP) 		((uint32_t *)(USB_PMA_BASE + ((EP) * 8 + 0)))
+#define USB_CHEP_RXTXBD(EP) 		((uint32_t *)(USB_PMA_BASE + ((EP) * 8 + 4)))
 #define CHEP_BD_ADDR_MASK 			0xffff
 #define CHEP_BD_COUNT_SHIFT			16
 #define CHEP_BD_COUNT_MASK			0x3ff
@@ -134,7 +134,7 @@
 #endif
 /** @cond */
 #else
-#error "st_usbfs_regs_v2.h should not be included directly, only via st_usbfs.h"
+#error "st_usbfs_ext.h should not be included directly, only via st_usbfs.h"
 #endif
 /** @endcond */
 
