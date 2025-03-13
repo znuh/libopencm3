@@ -105,7 +105,7 @@ void st_usbfs_ep_setup(usbd_device *dev, uint8_t addr, uint8_t type,
 		[USB_ENDPOINT_ATTR_BULK] = USB_EP_TYPE_BULK,
 		[USB_ENDPOINT_ATTR_INTERRUPT] = USB_EP_TYPE_INTERRUPT,
 	};
-	uint8_t dir = addr & 0x80;
+	uint8_t dir_tx = addr >> 7;
 	addr &= 0x7f;
 
 	/* this implementation can only handle endpoint addresses < 8 for now.
@@ -117,7 +117,7 @@ void st_usbfs_ep_setup(usbd_device *dev, uint8_t addr, uint8_t type,
 	USB_SET_EP_ADDR(addr, addr);
 	USB_SET_EP_TYPE(addr, typelookup[type]);
 
-	if (dir || (addr == 0)) {
+	if (dir_tx || (addr == 0)) {
 		st_usbfs_pm->assign_buffer(addr, USB_BUF_TX, &dev->pm_top, 0);
 		if (callback) {
 			dev->user_callback_ctr[addr][USB_TRANSACTION_IN] =
@@ -129,7 +129,7 @@ void st_usbfs_ep_setup(usbd_device *dev, uint8_t addr, uint8_t type,
 		tx_bufsize[addr] = max_size;
 	}
 
-	if (!dir) {
+	if (!dir_tx) {
 		uint32_t realsize = max_size;
 		st_usbfs_pm->assign_buffer(addr, USB_BUF_RX, &dev->pm_top, bufsize_to_rxblocks(&realsize) << 10);
 		if (callback) {
