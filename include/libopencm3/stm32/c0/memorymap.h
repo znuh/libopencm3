@@ -83,4 +83,8 @@
 #define ST_VREFINT_CAL			MMIO16((INFO_BASE + 0x6A))
 #define ST_TSENSE_CAL1_30C		MMIO16((INFO_BASE + 0x68))
 
+/* Option Bytes */
+#define OPTION_BYTES_BASE			(0x1FFF7800)
+#define OPTION_BYTES			MMIO32(OPTION_BYTES_BASE)
+
 #endif
