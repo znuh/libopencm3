@@ -277,6 +277,8 @@ void flash_lock_progmem(void);
 /** Lock Option Byte Access */
 void flash_lock_option_bytes(void);
 
+void flash_program_option_bytes(uint32_t data);
+
 END_DECLS
 
 #endif

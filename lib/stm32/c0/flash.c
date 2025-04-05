@@ -111,6 +111,23 @@ void flash_erase_all_pages(void)
 	FLASH_CR &= ~FLASH_CR_MER;
 }
 
+/** @brief Program the Option Bytes
+ * This performs all operations necessary to program the option bytes.
+ * The option bytes do not need to be erased first.
+ * @param[in] data value to be programmed.
+ */
+void flash_program_option_bytes(uint32_t data)
+{
+	flash_wait_for_last_operation();
+
+	if (FLASH_CR & FLASH_CR_OPTLOCK)
+		flash_unlock_option_bytes();
+
+	FLASH_OPTR = data;
+	FLASH_CR |= FLASH_CR_OPTSTRT;
+	flash_wait_for_last_operation();
+}
+
 /** @brief Clear the Programming Sequence Error Flag */
 void flash_clear_pgserr_flag(void)
 {
