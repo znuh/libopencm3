@@ -118,14 +118,29 @@ void flash_erase_all_pages(void)
  */
 void flash_program_option_bytes(uint32_t data)
 {
+	uint32_t flash_locked;
+
 	flash_wait_for_last_operation();
+
+	flash_locked = FLASH_CR & FLASH_CR_LOCK;
+	if (flash_locked)
+		flash_unlock();
 
 	if (FLASH_CR & FLASH_CR_OPTLOCK)
 		flash_unlock_option_bytes();
 
 	FLASH_OPTR = data;
 	FLASH_CR |= FLASH_CR_OPTSTRT;
+
 	flash_wait_for_last_operation();
+
+	/* we lock the OPT bytes in any case because
+	 * only rednecks leave them unlocked */
+	flash_lock_option_bytes();
+
+	/* leave flash lock in the way we found it */
+	if(flash_locked)
+		flash_lock();
 }
 
 /** @brief Clear the Programming Sequence Error Flag */
@@ -201,13 +216,13 @@ void flash_icache_reset(void)
 	FLASH_ACR |= FLASH_ACR_ICRST;
 }
 
-void flash_unlock_progmem(void)
+void flash_unlock(void)
 {
 	FLASH_KEYR = FLASH_KEYR_KEY1;
 	FLASH_KEYR = FLASH_KEYR_KEY2;
 }
 
-void flash_lock_progmem(void)
+void flash_lock(void)
 {
 	FLASH_CR |= FLASH_CR_LOCK;
 }
@@ -215,18 +230,6 @@ void flash_lock_progmem(void)
 void flash_lock_option_bytes(void)
 {
 	FLASH_CR |= FLASH_CR_OPTLOCK;
-}
-
-void flash_unlock(void)
-{
-	flash_unlock_progmem();
-	flash_unlock_option_bytes();
-}
-
-void flash_lock(void)
-{
-	flash_lock_option_bytes();
-	flash_lock_progmem();
 }
 
 /**@}*/

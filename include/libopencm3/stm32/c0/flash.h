@@ -269,11 +269,6 @@ void flash_icache_disable(void);
 /** Reset instruction cache */
 void flash_icache_reset(void);
 
-/** Unlock program memory */
-void flash_unlock_progmem(void);
-/** lock program memory */
-void flash_lock_progmem(void);
-
 /** Lock Option Byte Access */
 void flash_lock_option_bytes(void);
 
