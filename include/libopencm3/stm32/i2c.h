@@ -38,6 +38,8 @@
 #       include <libopencm3/stm32/l1/i2c.h>
 #elif defined(STM32L4)
 #       include <libopencm3/stm32/l4/i2c.h>
+#elif defined(STM32U5)
+#       include <libopencm3/stm32/u5/i2c.h>
 #elif defined(STM32C0)
 #       include <libopencm3/stm32/c0/i2c.h>
 #elif defined(STM32G0)

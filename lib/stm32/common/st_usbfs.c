@@ -26,6 +26,7 @@
 #include <libopencm3/stm32/tools.h>
 #include <libopencm3/stm32/st_usbfs.h>
 #include <libopencm3/usb/usbd.h>
+#include <libopencm3/usb/bos.h>
 #include "../../usb/usb_private.h"
 #include "st_usbfs_core.h"
 
@@ -194,21 +195,22 @@ static uint16_t pm_read_2x16(uint16_t ep_id, void *dst, uint16_t len)
 	uint8_t odd = res & 1;
 	len = res >> 1;
 
-	if (((uintptr_t) dst) & 0x01) {
+	if (((uintptr_t)buf) & 0x01) {
+		uint8_t *dest = (uint8_t *)buf;
 		for (; len; PM++, len--) {
 			uint16_t value = *PM;
-			*(uint8_t *) dst++ = value;
-			*(uint8_t *) dst++ = value >> 8;
+			*(uint8_t *)dest++ = value;
+			*(uint8_t *)dest++ = value >> 8;
 		}
 	} else {
-		for (; len; PM++, dst += 2, len--) {
-			*(uint16_t *) dst = *PM;
-		}
+		uint16_t *dest = (uint16_t *)buf;
+		for (; len; PM++, dest++, len--) {
+			*dest = *PM;
 	}
 
-	if (odd) {
-		*(uint8_t *) dst = *(uint8_t *) PM;
-	}
+	if (odd)
+		*(uint8_t *)buf = *(uint8_t *)PM;
+
 	return res;
 }
 
