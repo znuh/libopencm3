@@ -80,7 +80,7 @@ libstm32f0 = static_library(
 	dependencies: [
 		stm32f0_cm3,
 		usb_common,
-		libstm32_usb_fs_v2,
+		libstm32_usb_fs,
 	],
 	pic: false,
 )

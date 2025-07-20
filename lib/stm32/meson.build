@@ -33,18 +33,6 @@ subdir('common')
 
 # Sources specific to STM32 parts
 libstm32_can_sources = files('can.c')
-# Sources for the USB FS peripherals
-libstm32_usb_fs_v1_sources = files('st_usbfs_v1.c')
-libstm32_usb_fs_v2_sources = files('st_usbfs_v2.c')
-
-# Define a dependency for each generation of USB FS peripheral
-libstm32_usb_fs_v1 = declare_dependency(
-	sources: [libstm32_usb_fs_sources, libstm32_usb_fs_v1_sources]
-)
-
-libstm32_usb_fs_v2 = declare_dependency(
-	sources: [libstm32_usb_fs_sources, libstm32_usb_fs_v2_sources]
-)
 
 # Mapping of target platform names to subdirs
 subdirs = {

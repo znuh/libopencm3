@@ -84,7 +84,7 @@ libstm32f1 = static_library(
 		stm32f1_cm3,
 		usb_common,
 		usb_stm32_dwc,
-		libstm32_usb_fs_v1,
+		libstm32_usb_fs,
 	],
 	pic: false,
 )

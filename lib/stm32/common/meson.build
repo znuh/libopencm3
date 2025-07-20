@@ -146,4 +146,7 @@ libstm32_usart_v2_sources = [
 ]
 libstm32_usart_fifos_sources = files('usart_common_fifos.c')
 
-libstm32_usb_fs_sources = files('st_usbfs_core.c')
+libstm32_usb_fs_sources = [
+	files('st_usbfs_core.c'),
+	files('st_usbfs.c')
+]
