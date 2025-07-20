@@ -204,7 +204,7 @@ static uint16_t pm_read_2x16(uint16_t ep_id, void *dst, uint16_t len)
 		}
 	} else {
 		uint16_t *dest = (uint16_t *)dst;
-		for (; len; PM++, dest++, len--) {
+		for (; len; PM++, dest++, len--)
 			*dest = *PM;
 	}
 
