@@ -195,21 +195,21 @@ static uint16_t pm_read_2x16(uint16_t ep_id, void *dst, uint16_t len)
 	uint8_t odd = res & 1;
 	len = res >> 1;
 
-	if (((uintptr_t)buf) & 0x01) {
-		uint8_t *dest = (uint8_t *)buf;
+	if (((uintptr_t)dst) & 0x01) {
+		uint8_t *dest = (uint8_t *)dst;
 		for (; len; PM++, len--) {
 			uint16_t value = *PM;
 			*(uint8_t *)dest++ = value;
 			*(uint8_t *)dest++ = value >> 8;
 		}
 	} else {
-		uint16_t *dest = (uint16_t *)buf;
+		uint16_t *dest = (uint16_t *)dst;
 		for (; len; PM++, dest++, len--) {
 			*dest = *PM;
 	}
 
 	if (odd)
-		*(uint8_t *)buf = *(uint8_t *)PM;
+		*(uint8_t *)dst = *(uint8_t *)PM;
 
 	return res;
 }
